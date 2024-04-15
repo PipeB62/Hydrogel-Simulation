@@ -1,0 +1,86 @@
+#Aplicar deformacion
+#Patchy particles con bonds armonicos.
+#Change box y ciclos para aplicar deformacion
+
+#Inicializacion
+units lj 
+boundary p p p
+atom_style full 
+newton on 
+
+#Interacciones
+bond_style harmonic
+angle_style harmonic
+pair_style hybrid/overlay lj/cut 1.122462 sw threebody off threebody/table
+
+#Importar datos de atomos 
+read_data ../output_data/self_assembly/system_v2.data extra/special/per/atom  
+
+#Cambiar el tipo de caja para poder aplicar la deformacion
+change_box all triclinic 
+
+#Coeficientes de interacciones
+pair_coeff * * threebody/table ../input_data/threebody.3b NULL Mon NULL Xl
+pair_coeff 2 4 sw ../input_data/patches.sw NULL Mon NULL Xl
+pair_coeff 2 2 sw ../input_data/patches.sw NULL Mon NULL Xl
+pair_coeff 1 1 lj/cut 1.0 1.0
+pair_coeff 1 2 none 
+pair_coeff 1 3 lj/cut 1.0 1.0
+pair_coeff 2 3 none
+pair_coeff 3 3 lj/cut 1.0 1.0
+pair_coeff 3 4 none
+pair_coeff 1 4 none 
+pair_coeff 4 4 none
+
+#groups 
+group patches type 2 4
+group centers type 1 3
+group none empty
+
+#Computes
+compute presion all pressure NULL pair bond
+
+# --- SHEAR RATE ---
+variable shear_rate equal 1e-3 #shear rate (1/t)
+# --- SHEAR RATE ---
+
+#variables
+variable dt equal 1e-3
+variable max_strain equal 2 #maximo tilt factor (adimensional)
+variable delta_gamma equal 0.01 #cambio en tiltfactor de cada deformacion (adimensional)
+variable zhi equal zhi
+variable zlo equal zlo 
+variable l equal v_zhi-v_zlo #longitud de caja
+variable flip_strain equal 0.5*v_l
+variable delta_gamma_distance equal v_delta_gamma*v_l
+variable xy equal xy #tilt factor 
+variable n equal v_max_strain/v_delta_gamma #numero de deformaciones
+variable relaxation_time equal v_delta_gamma/v_shear_rate
+variable shear_every equal v_relaxation_time/v_dt
+variable shear_iter_num equal v_n*v_shear_every 
+variable n_pres_av equal v_shear_every/2
+variable pres_iter equal stride(v_shear_every-1,v_shear_iter_num,v_shear_every)
+variable n_loop loop ${n}
+
+#Thermo output
+thermo v_pres_iter
+thermo_style custom step temp xy c_presion[4]
+dump mydmp all atom ${shear_every} ../output_data/shearing/dumps_v3/dump_v3_1em3.lammpstrj
+
+timestep ${dt}
+
+#Integrar. Ensamble NVE. Termostato de langevin
+fix mynve all nve 
+fix thermostat all langevin 0.0 0.0 1 820394
+
+#Exportar presion
+fix presion_ave all ave/time 1 ${n_pres_av} ${shear_every} c_presion[*] file ../output_data/shearing/estres_v3/presion_ave_1em3.dat #Exportar datos de presion a archivo
+
+label runloop
+change_box all xy delta ${delta_gamma_distance} remap
+if "${xy} == ${flip_strain}" then "change_box all xy final -${flip_strain}" 
+run ${shear_every}
+next n_loop
+jump SELF runloop
+
+write_data ../output_data/shearing/system_v3.data 

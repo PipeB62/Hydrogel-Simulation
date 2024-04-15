@@ -1,0 +1,74 @@
+#Inicializacion
+units lj 
+boundary p p p
+atom_style full 
+newton on 
+
+#Interacciones
+pair_style hybrid/overlay lj/cut 1.122462 sw threebody off threebody/table
+
+#Importar datos de atomos 
+read_data ../system_v1.data extra/special/per/atom 10
+
+#Cambiar el tipo de caja para poder aplicar la deformacion
+change_box all triclinic 
+
+#Coeficientes de interacciones
+pair_coeff * * threebody/table threebody.3b NULL Mon NULL Xl
+pair_coeff 2 4 sw patches.sw NULL Mon NULL Xl
+pair_coeff 2 2 sw patches.sw NULL Mon NULL Xl
+pair_coeff 1 1 lj/cut 1.0 1.0
+pair_coeff 1 2 none 
+pair_coeff 1 3 lj/cut 1.0 1.0
+pair_coeff 2 3 none
+pair_coeff 3 3 lj/cut 1.0 1.0
+pair_coeff 3 4 none
+pair_coeff 1 4 none 
+pair_coeff 4 4 none
+
+#groups 
+group patches type 2 4
+group centers type 1 3
+group none empty
+
+#Calcular tensor de presion (estres)
+#compute mytemp all temp
+#compute presion all pressure mytemp
+compute presion all pressure NULL pair
+
+#SHEAR RATE
+variable shear_rate equal 1e-4 #shear rate (1/t)
+
+#variables
+variable dt equal 5e-3
+variable max_strain equal 1 #maximo tilt factor (adimensional)
+variable delta_gamma equal 0.01 #cambio en tiltfactor de cada deformacion
+variable zhi equal zhi
+variable zlo equal zlo 
+variable l equal v_zhi-v_zlo #longitud de caja
+variable xy equal xy #tilt factor 
+variable n equal v_max_strain/v_delta_gamma #numero de deformaciones
+variable relaxation_time equal v_delta_gamma/v_shear_rate
+variable shear_every equal v_relaxation_time/v_dt
+variable shear_iter_num equal v_n*v_shear_every 
+variable n_pres_av equal v_shear_every/2
+variable pres_iter equal stride(v_shear_every-1,v_shear_iter_num,v_shear_every)
+
+#Thermo output
+thermo v_pres_iter
+thermo_style custom step temp xy c_presion[4]
+dump mydmp all atom ${shear_every} dumps_v4/dump_v4_1em4.lammpstrj
+
+#timestep
+timestep ${dt}
+
+#Correr con shear
+fix mynve all rigid/small molecule langevin 0 0 1 823300 #Integrar. Ensamble NVE. Termostato de langevin
+fix shear all deform ${shear_every} xy erate ${shear_rate} remap x flip no #Aplicar deformacion
+
+#Exportar presion promediada
+fix presion_ave all ave/time 1 ${n_pres_av} ${shear_every} c_presion[*] file estres_v4/presion_ave_1em4.dat #Exportar datos de presion a archivo
+
+run ${shear_iter_num}
+
+write_data system4.data

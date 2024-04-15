@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 version = input('Version: ')
 
 #Importar 4 dumps de shearing
-input_filefolder = "/home/pipe/lammps/code/HYDROGELS/selfassembly2/shearing/dumps_v"+version+"/"
+input_filefolder = "~/Hydrogel-Simulation/output_data/shearing/dumps_v"+version+"/"
 input_filenames = ["dump_v"+version+"_1em4.lammpstrj","dump_v"+version+"_1em3.lammpstrj","dump_v"+version+"_1em2.lammpstrj"]
 
 input_filenames.remove("dump_v"+version+"_1em4.lammpstrj")
