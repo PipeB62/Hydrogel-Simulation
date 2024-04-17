@@ -79,6 +79,7 @@ thermo 10000
 minimize 1.0e-4 1.0e-6 1000 100000 
 
 fix mynve all nve #Dinamica NVE
+
 #Guardar info de energia
 fix save_pot_ene all ave/time 1 1 10000 c_pot_ene file /media/felipe/Files/Hydrogel_sim_results/SizeExperiments/4k_particles/exp3/pot_ene_v2_formation_4k_3.dat #CAMBIAR 
 
