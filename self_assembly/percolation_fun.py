@@ -3,9 +3,8 @@ def percolation():
     from ovito.modifiers import ClusterAnalysisModifier, CreateBondsModifier, ReplicateModifier
     import numpy as np
 
-    version = "2"
 
-    input_filepath="/home/pipe/lammps/code/HYDROGELS/selfassembly2/system_v"+version+".data"
+    input_filepath="/home/pipe/HYDROGELS/Hydrogel-Simulation/self_assembly/system_check.data"
 
     node = import_file(input_filepath)
 

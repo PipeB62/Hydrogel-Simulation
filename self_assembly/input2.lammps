@@ -64,12 +64,12 @@ group patches type 2 4
 compute pot_ene all pe
 
 #Visualizacion
-dump mydmp all atom 10000 ../output_data/self_assembly/dump_v2.lammpstrj
+dump mydmp all atom 10000 ../../Results/SizeExperiment/dump_formation_v2.lammpstrj
 dump_modify mydmp scale no
 thermo 10000
 
 #Minimizar energia.
-minimize 1.0e-4 1.0e-6 100 1000 
+minimize 1.0e-4 1.0e-6 1000 100000 
 
 fix mynve all nve #Dinamica NVE
 fix save_pot_ene all ave/time 1 1 10000 c_pot_ene file ../output_data/self_assembly/pot_ene_v2.dat #Guardar info de energia
@@ -88,7 +88,7 @@ run 500000 start 0
 fix thermostat all langevin 0.05 0.05 0.5 402438
 label formation_loop
 run 100000 start 0
-write_data system_v2.data
+write_data system_check.data
 print ${check_percolation}
 if "${check_percolation} == 1" then "jump SELF bajar_temp" else "jump SELF formation_loop" #Cuando percole salir del loop
 
@@ -97,4 +97,4 @@ label bajar_temp
 fix thermostat all langevin 0.05 0.0 0.5 820394
 run 500000 start 0
 
-write_data ../output_data/self_assembly/system_v2.data 
+write_data ../../Results/SizeExperiment/2k_particles/system_v2_formation_2k_1.data 
