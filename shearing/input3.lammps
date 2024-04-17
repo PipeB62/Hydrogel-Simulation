@@ -14,15 +14,15 @@ angle_style harmonic
 pair_style hybrid/overlay lj/cut 1.122462 sw threebody off threebody/table
 
 #Importar datos de atomos 
-read_data ../output_data/self_assembly/system_v2.data extra/special/per/atom  
+read_data /media/felipe/Files/Hydrogel_sim_results/SizeExperiments/2k_particles/exp5/system_v2_formation_2k_5.data extra/special/per/atom 10 #CAMBIAR 
 
 #Cambiar el tipo de caja para poder aplicar la deformacion
 change_box all triclinic 
 
 #Coeficientes de interacciones
-pair_coeff * * threebody/table ../input_data/threebody.3b NULL Mon NULL Xl
-pair_coeff 2 4 sw ../input_data/patches.sw NULL Mon NULL Xl
-pair_coeff 2 2 sw ../input_data/patches.sw NULL Mon NULL Xl
+pair_coeff * * threebody/table /home/felipe/HYDROGELS/Hydrogel-Simulation/input_data/threebody.3b NULL Mon NULL Xl
+pair_coeff 2 4 sw /home/felipe/HYDROGELS/Hydrogel-Simulation/input_data/patches.sw NULL Mon NULL Xl
+pair_coeff 2 2 sw /home/felipe/HYDROGELS/Hydrogel-Simulation/input_data/patches.sw NULL Mon NULL Xl
 pair_coeff 1 1 lj/cut 1.0 1.0
 pair_coeff 1 2 none 
 pair_coeff 1 3 lj/cut 1.0 1.0
@@ -40,8 +40,11 @@ group none empty
 #Computes
 compute presion all pressure NULL pair bond
 
+#SEED
+variable seed1 equal 895475
+
 # --- SHEAR RATE ---
-variable shear_rate equal 1e-3 #shear rate (1/t)
+variable shear_rate equal 1e-2 #shear rate (1/t)
 # --- SHEAR RATE ---
 
 #variables
@@ -65,16 +68,16 @@ variable n_loop loop ${n}
 #Thermo output
 thermo v_pres_iter
 thermo_style custom step temp xy c_presion[4]
-dump mydmp all atom ${shear_every} ../output_data/shearing/dumps_v3/dump_v3_1em3.lammpstrj
+dump mydmp all atom ${shear_every} /media/felipe/Files/Hydrogel_sim_results/SizeExperiments/2k_particles/exp5/dump_v3_shearing_2k_5.lammpstrj #CAMBIAR
 
 timestep ${dt}
 
 #Integrar. Ensamble NVE. Termostato de langevin
 fix mynve all nve 
-fix thermostat all langevin 0.0 0.0 1 820394
+fix thermostat all langevin 0.0 0.0 1 ${seed1}
 
 #Exportar presion
-fix presion_ave all ave/time 1 ${n_pres_av} ${shear_every} c_presion[*] file ../output_data/shearing/estres_v3/presion_ave_1em3.dat #Exportar datos de presion a archivo
+fix presion_ave all ave/time 1 ${n_pres_av} ${shear_every} c_presion[*] file /media/felipe/Files/Hydrogel_sim_results/SizeExperiments/2k_particles/exp5/presion_ave_shearing_2k_5.dat #CAMBIAR
 
 label runloop
 change_box all xy delta ${delta_gamma_distance} remap
@@ -83,4 +86,4 @@ run ${shear_every}
 next n_loop
 jump SELF runloop
 
-write_data ../output_data/shearing/system_v3.data 
+write_data /media/felipe/Files/Hydrogel_sim_results/SizeExperiments/2k_particles/exp5/system_v3_shearing_2k_5.data #CAMBIAR

@@ -10,7 +10,7 @@ atom_style full
 newton on 
 
 #Crear caja de simulacion
-variable L equal 21
+variable L equal 16.09
 
 region sim_box block -$L $L -$L $L -$L $L
 create_box 4 sim_box &
@@ -28,9 +28,9 @@ mass 4 0.01 #Xlinker patches
 
 #Interacciones
 pair_style hybrid/overlay lj/cut 1.122462 sw threebody off threebody/table
-pair_coeff * * threebody/table ../input_data/threebody.3b NULL Mon NULL Xl
-pair_coeff 2 4 sw ../input_data/patches.sw NULL Mon NULL Xl
-pair_coeff 2 2 sw ../input_data/patches.sw NULL Mon NULL Xl
+pair_coeff * * threebody/table /home/felipe/HYDROGELS/Hydrogel-Simulation/input_data/threebody.3b NULL Mon NULL Xl
+pair_coeff 2 4 sw /home/felipe/HYDROGELS/Hydrogel-Simulation/input_data/patches.sw NULL Mon NULL Xl
+pair_coeff 2 2 sw /home/felipe/HYDROGELS/Hydrogel-Simulation/input_data/patches.sw NULL Mon NULL Xl
 pair_coeff 4 4 none
 pair_coeff 1 1 lj/cut 1.0 1.0
 pair_coeff 1 2 none 
@@ -48,14 +48,21 @@ angle_style harmonic
 angle_coeff 1 100.0 180
 angle_coeff 2 100.0 109.4712
 
+#Semillas
+variable seed1 equal 414437
+variable seed2 equal 750606
+variable seed3 equal 425019
+variable seed4 equal 208255
+variable seed5 equal 024043
+
 #Spawn de moleculas
 region spawn_box block -$L $L -$L $L -$L $L
 
-molecule 1 ../input_data/monomer.mol 
-molecule 2 ../input_data/xlinker.mol 
+molecule 1 /home/felipe/HYDROGELS/Hydrogel-Simulation/input_data/monomer.mol 
+molecule 2 /home/felipe/HYDROGELS/Hydrogel-Simulation/input_data/xlinker.mol 
 
-create_atoms 0 random 600 118394 spawn_box mol 2 734587 overlap 1.13 maxtry 5000
-create_atoms 0 random 8000 118394 spawn_box mol 1 884923 overlap 1.13 maxtry 5000
+create_atoms 0 random 280 118394 spawn_box mol 2 ${seed1} overlap 1.13 maxtry 5000 #xls
+create_atoms 0 random 3720 118394 spawn_box mol 1 ${seed2} overlap 1.13 maxtry 5000 #mon
 
 #grupos 
 group patches type 2 4 
@@ -64,7 +71,7 @@ group patches type 2 4
 compute pot_ene all pe
 
 #Visualizacion
-dump mydmp all atom 10000 ../../Results/SizeExperiment/dump_formation_v2.lammpstrj
+dump mydmp all atom 10000 /media/felipe/Files/Hydrogel_sim_results/SizeExperiments/4k_particles/exp3/dump_v2_formation_4k_3.lammpstrj #CAMBIAR
 dump_modify mydmp scale no
 thermo 10000
 
@@ -72,8 +79,10 @@ thermo 10000
 minimize 1.0e-4 1.0e-6 1000 100000 
 
 fix mynve all nve #Dinamica NVE
-fix save_pot_ene all ave/time 1 1 10000 c_pot_ene file ../output_data/self_assembly/pot_ene_v2.dat #Guardar info de energia
+#Guardar info de energia
+fix save_pot_ene all ave/time 1 1 10000 c_pot_ene file /media/felipe/Files/Hydrogel_sim_results/SizeExperiments/4k_particles/exp3/pot_ene_v2_formation_4k_3.dat #CAMBIAR 
 
+#timestep
 timestep 0.002 
 
 #Percolation_fun de python
@@ -81,11 +90,11 @@ variable check_percolation python percolation
 python percolation return v_check_percolation format i file percolation_fun.py
 
 #subir temperatura
-fix thermostat all langevin 0.0 0.05 0.5 234798
+fix thermostat all langevin 0.0 0.05 0.5 ${seed3}
 run 500000 start 0
 
 #formar
-fix thermostat all langevin 0.05 0.05 0.5 402438
+fix thermostat all langevin 0.05 0.05 0.5 ${seed4}
 label formation_loop
 run 100000 start 0
 write_data system_check.data
@@ -94,7 +103,7 @@ if "${check_percolation} == 1" then "jump SELF bajar_temp" else "jump SELF forma
 
 #Bajar temperatura
 label bajar_temp
-fix thermostat all langevin 0.05 0.0 0.5 820394
+fix thermostat all langevin 0.05 0.0 0.5 ${seed5}
 run 500000 start 0
 
-write_data ../../Results/SizeExperiment/2k_particles/system_v2_formation_2k_1.data 
+write_data /media/felipe/Files/Hydrogel_sim_results/SizeExperiments/4k_particles/exp3/system_v2_formation_4k_3.data #CAMBIAR  

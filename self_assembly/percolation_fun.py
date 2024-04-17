@@ -4,7 +4,7 @@ def percolation():
     import numpy as np
 
 
-    input_filepath="/home/pipe/HYDROGELS/Hydrogel-Simulation/self_assembly/system_check.data"
+    input_filepath="/home/felipe/HYDROGELS/Hydrogel-Simulation/self_assembly/system_check.data"
 
     node = import_file(input_filepath)
 

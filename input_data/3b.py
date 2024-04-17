@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt 
 
 def V_3_f(r,sigma,r_min,r_c):
     if r < r_min:
@@ -95,6 +94,7 @@ file.write('# Tabulated threebody potential\n\n'+
 np.savetxt(file,data2,delimiter=' ',newline='\n',comments='',fmt=' '.join(['%i'] + ['%1.4f']*10))
 file.close()
 
+tablepath = "/home/felipe/HYDROGELS/Hydrogel-Simulation/input_data/"
 
 #3b file
 file = open('threebody.3b','a')
@@ -104,42 +104,42 @@ for i in range(8):
         s1 = 'Mon\n'
         s2 = 'Mon\n'
         s3 = 'Mon\n'
-        table = '3b.table\n'
+        table = tablepath+'3b.table\n'
     elif i == 1:
         s1 = 'Xl\n'
         s2 = 'Mon\n'
         s3 = 'Mon\n'
-        table = '3b.table\n'
+        table = tablepath+'3b.table\n'
     elif i == 2: 
         s1 = 'Mon\n'
         s2 = 'Xl\n'
         s3 = 'Mon\n'
-        table = '3b_2.table\n'
+        table = tablepath+'3b_2.table\n'
     elif i == 3:
         s1 = 'Mon\n'
         s2 = 'Mon\n'
         s3 = 'Xl\n'
-        table = '3b_2.table\n'
+        table = tablepath+'3b_2.table\n'
     elif i == 4:
         s1 = 'Mon\n'
         s2 = 'Xl\n'
         s3 = 'Xl\n'
-        table = '3b.table\n'
+        table = tablepath+'3b.table\n'
     elif i == 5: 
         s1 = 'Xl\n'
         s2 = 'Mon\n'
         s3 = 'Xl\n'
-        table = '3b_2.table\n'
+        table = tablepath+'3b_2.table\n'
     elif i == 6:
         s1 = 'Xl\n'
         s2 = 'Xl\n'
         s3 = 'Mon\n'
-        table = '3b_2.table\n'
+        table = tablepath+'3b_2.table\n'
     elif i == 7:
         s1 = 'Xl\n'
         s2 = 'Xl\n'
         s3 = 'Xl\n'
-        table = '3b.table\n'
+        table = tablepath+'3b.table\n'
     file.write(s1+
             s2+
             s3+

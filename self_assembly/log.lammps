@@ -1,0 +1,5 @@
+LAMMPS (2 Aug 2023 - Update 3)
+# Crear sistema
+#Modelo de patchy particles con bonds armonicos.
+
+log none
