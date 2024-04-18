@@ -1,4 +1,11 @@
 from random import randint
+import os 
+
+#Obtener direccion de carpeta input_data
+dir_path = os.path.dirname(os.path.realpath(__file__))
+dir_path_split = dir_path.split("/")
+dir_path_split[-1]="input_data"
+inputfilesdir = "/".join(dir_path_split)
 
 #Pedir al usuario parametros de simulacion
 directory = input("File directory: ")
@@ -28,11 +35,11 @@ l = 2*L
 
 flip_strain = 0.5*l
 delta_gamma_distance = delta_gamma*l
-n = max_strain/delta_gamma
+n = int(max_strain/delta_gamma)
 relaxation_time = delta_gamma/shear_rate
-shear_every = relaxation_time/timestep
+shear_every = int(relaxation_time/timestep)
 shear_iter_num = n*shear_every 
-n_pres_av = shear_every/2
+n_pres_av = int(shear_every/2)
 
 #Definir unidades, condiciones de frontera, tipos de atomos. Newton on necesario para potencial de tres cuerpos. No guardar log en archivo
 inicializacion = ("log none \n\n" 
@@ -43,9 +50,9 @@ inicializacion = ("log none \n\n"
 
 #Definir interacciones. centro-centro = lj. xl-xl = patches.sw. threebody para xl-xl-xl
 pair_definitions = ("pair_style hybrid/overlay lj/cut 1.122462 sw threebody off threebody/table\n"
-                    "pair_coeff * * threebody/table ../input_data/threebody.3b NULL Mon NULL Xl\n"
-                    "pair_coeff 2 4 sw ../input_data/patches.sw NULL Mon NULL Xl\n"
-                    "pair_coeff 2 2 sw ../input_data/patches.sw NULL Mon NULL Xl\n"
+                    f"pair_coeff * * threebody/table {inputfilesdir}/threebody.3b NULL Mon NULL Xl\n"
+                    f"pair_coeff 2 4 sw {inputfilesdir}/patches.sw NULL Mon NULL Xl\n"
+                    f"pair_coeff 2 2 sw {inputfilesdir}/patches.sw NULL Mon NULL Xl\n"
                     "pair_coeff 4 4 none\n"
                     "pair_coeff 1 1 lj/cut 1.0 1.0\n"
                     "pair_coeff 1 2 none\n"
@@ -90,7 +97,7 @@ shear = (f"variable n_loop loop {n} \n"
 
 write_data = f"write_data {directory}/system_shearing_{last_name}.data"
 
-input_file = [inicializacion,pair_definitions,bonds_angles,read_system,computes,visualization,
+input_file = [inicializacion,bonds_angles,read_system,pair_definitions,computes,visualization,
               fix_save_press,fix_nve,shear,write_data]
 with open(f"{directory}/input_shearing_{last_name}.lammps","a") as f:  
     f.truncate(0)

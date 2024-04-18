@@ -1,10 +1,10 @@
-def percolation():
+def percolation(directory):
     from ovito.io import import_file
     from ovito.modifiers import ClusterAnalysisModifier, CreateBondsModifier, ReplicateModifier
     import numpy as np
 
 
-    input_filepath="/home/felipe/HYDROGELS/Hydrogel-Simulation/self_assembly/system_check.data"
+    input_filepath=f"{directory}/system_check.data"
 
     node = import_file(input_filepath)
 

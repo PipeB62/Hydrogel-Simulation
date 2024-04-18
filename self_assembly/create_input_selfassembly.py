@@ -1,4 +1,11 @@
 from random import randint
+import os 
+
+#Obtener direccion de carpeta input_data
+dir_path = os.path.dirname(os.path.realpath(__file__))
+dir_path_split = dir_path.split("/")
+dir_path_split[-1]="input_data"
+inputfilesdir = "/".join(dir_path_split)
 
 #Pedir al usuario parametros de simulacion
 L = input("L = ")
@@ -44,9 +51,9 @@ atom_types = ("mass 1 1.0 \n" #Monomer
 
 #Definir interacciones. centro-centro = lj. xl-xl = patches.sw. threebody para xl-xl-xl
 pair_definitions = ("pair_style hybrid/overlay lj/cut 1.122462 sw threebody off threebody/table\n"
-                    "pair_coeff * * threebody/table ../input_data/threebody.3b NULL Mon NULL Xl\n"
-                    "pair_coeff 2 4 sw ../input_data/patches.sw NULL Mon NULL Xl\n"
-                    "pair_coeff 2 2 sw ../input_data/patches.sw NULL Mon NULL Xl\n"
+                    f"pair_coeff * * threebody/table {inputfilesdir}/threebody.3b NULL Mon NULL Xl\n"
+                    f"pair_coeff 2 4 sw {inputfilesdir}/patches.sw NULL Mon NULL Xl\n"
+                    f"pair_coeff 2 2 sw {inputfilesdir}/patches.sw NULL Mon NULL Xl\n"
                     "pair_coeff 4 4 none\n"
                     "pair_coeff 1 1 lj/cut 1.0 1.0\n"
                     "pair_coeff 1 2 none\n"
@@ -65,8 +72,8 @@ bonds_angles = ("bond_style harmonic \n"
 
 #Generar moleculas
 spawn = (f"region spawn_box block -{L} {L} -{L} {L} -{L} {L} \n\n" 
-         "molecule 1 ../input_data/monomer.mol \n" 
-         "molecule 2 ../input_data/xlinker.mol \n\n"
+         f"molecule 1 {inputfilesdir}/monomer.mol \n" 
+         f"molecule 2 {inputfilesdir}/xlinker.mol \n\n"
          f"create_atoms 0 random {xl_num} {seeds[0]} spawn_box mol 2 {seeds[1]} overlap 1.13 maxtry 5000 \n"
          f"create_atoms 0 random {mon_num} {seeds[2]} spawn_box mol 1 {seeds[3]} overlap 1.13 maxtry 5000 \n\n")
 
@@ -90,7 +97,7 @@ fix_nve = (f"timestep {timestep} \n"
 
 #Percolation_fun de python
 percolation_check = ("variable check_percolation python percolation \n"
-                     "python percolation return v_check_percolation format i file percolation_fun.py \n\n")
+                     f'python percolation input 1 "{directory}" return v_check_percolation format si file {dir_path}/percolation_fun.py \n\n')
 
 #fase 1: subir temperatura
 fase1 = (f"fix thermostat all langevin 0.0 {temp} {damp} {seeds[4]} \n" 
