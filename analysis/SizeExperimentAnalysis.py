@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 directory = input("SizeExperiment Directory: ")
 
-pk = [2,4,8] #Lista con numeros de particulas (x10^3)
+pk = [2,4,8,16] #Lista con numeros de particulas (x10^3)
 pres_average = [] #Lista para guardar promedios de presion por iteracion
 pres_std = [] #Lista para guardar desviaciones estandar promedio 
 for n in pk: #iterar numero de particulas
@@ -23,10 +23,11 @@ plt.figure()
 plt.plot(x,pres_average[0])
 plt.plot(x,pres_average[1])
 plt.plot(x,pres_average[2])
+plt.plot(x,pres_average[3])
 plt.title("Stress-Strain. $\dot{\gamma}=0.01$")
 plt.xlabel("$\gamma$")
 plt.ylabel("$\sigma_{xy}$")
-plt.legend(("2k","4k","8k"))
+plt.legend(("2k","4k","8k","16k"))
 #grafica desviacion estandar promedio
 plt.figure()
 plt.scatter(pk,pres_std)
