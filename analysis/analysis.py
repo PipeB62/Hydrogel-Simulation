@@ -8,19 +8,19 @@ from ovito.modifiers import ClusterAnalysisModifier, CreateBondsModifier
 import numpy as np
 import matplotlib.pyplot as plt 
 
-#Version
-version = input('Version: ')
-
-#Importar 4 dumps de shearing
-input_filefolder = "/home/pipe/Hydrogel-Simulation/output_data/shearing/dumps_v"+version+"/"
-input_filenames = ["dump_v"+version+"_1em4.lammpstrj","dump_v"+version+"_1em3.lammpstrj","dump_v"+version+"_1em2.lammpstrj"]
-
-input_filenames.remove("dump_v"+version+"_1em4.lammpstrj")
-#input_filenames.remove("dump_v"+version+"_1em3.lammpstrj")
+input_filefolder = input("Folder directory: ")
+input_filenames = []
+legend = []
+for i in range(3):
+    file = input("Filename (type end to stop): ")
+    if file == "end":
+        break
+    else:
+        input_filenames.append(file)
+        input('Legend: ')
 
 colors = ['red','green','blue']
 markers = ['|','_','.']
-x = np.linspace(0,2,num=200)
 
 plt.figure('bonds_v_t')
 plt.title('Bonds')
@@ -32,10 +32,12 @@ plt.figure('clustersize_v_t')
 plt.title('Biggest cluster size')
 
 for k,file in enumerate(input_filenames):
-    node = import_file(input_filefolder+file)
+    node = import_file(input_filefolder+"/"+file)
 
     #Obtener numero de iteraciones
     iter_num = node.source.num_frames
+
+    x = np.arange(iter_num-1)
 
     #Modificador para crear bonds patch-patch
     Rlim = 0.5 #Cutoff para crear bonds patch-patch
@@ -82,17 +84,17 @@ for k,file in enumerate(input_filenames):
     plt.plot(x,bigclustersz_v_t,c=colors[k],marker=markers[k],fillstyle='none',linestyle='None')
 
 plt.figure('bonds_v_t')
-plt.legend(['1e-4','1e-3','1e-2'],title='$\dot{\gamma}$')
+plt.legend(legend)
 plt.xlabel('Time')
 plt.ylabel('Number of bonds')
 
 plt.figure('clusternum_v_t')
-plt.legend(['1e-4','1e-3','1e-2'],title='$\dot{\gamma}$')
+plt.legend(legend)
 plt.xlabel('Time')
 plt.ylabel('Number of clusters')
 
 plt.figure('clustersize_v_t')
-plt.legend(['1e-4','1e-3','1e-2'],title='$\dot{\gamma}$')
+plt.legend(legend)
 plt.xlabel('Time')
 plt.ylabel('Number of atoms in biggest cluster')
 

@@ -8,15 +8,16 @@ from ovito.pipeline import ReferenceConfigurationModifier
 import matplotlib.pyplot as plt
 import numpy as np
 
-#Version
-version = input("Version: ")
-
-#Importar dumps de shearing
-input_filefolder = "/home/pipe/Hydrogel-Simulation/output_data/shearing/dumps_v"+version+"/"
-input_filenames = ["dump_v"+version+"_1em4.lammpstrj","dump_v"+version+"_1em3.lammpstrj","dump_v"+version+"_1em2.lammpstrj"]
-
-#input_filenames.remove("dump_v"+version+"_1em4.lammpstrj")
-input_filenames.remove("dump_v"+version+"_1em3.lammpstrj")
+input_filefolder = input("Folder directory: ")
+input_filenames = []
+legend = []
+for i in range(3):
+    file = input("Filename (type end to stop): ")
+    if file == "end":
+        break
+    else:
+        input_filenames.append(file)
+        input('Legend: ')
 
 colors = ['red','green','blue']
 markers = ['x','o','s']
@@ -24,7 +25,7 @@ x = np.linspace(0,2,num=200)
 
 
 for k,filename in enumerate(input_filenames):
-    input_filepath = input_filefolder+filename
+    input_filepath = input_filefolder+'/'+filename
     node = import_file(input_filepath)
 
     #Obtener numero de iteraciones
@@ -64,7 +65,7 @@ for k,filename in enumerate(input_filenames):
 
 plt.figure(1)
 plt.title('Average non-affine square displacement. Frame 0 reference')
-plt.legend(['1e-4','1e-3','1e-2'],title='$\dot{\gamma}$')
+plt.legend(legend)
 plt.xlabel('$\gamma$')
 plt.ylabel('$D^2_{min}$')
 
