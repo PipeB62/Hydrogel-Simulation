@@ -1,38 +1,16 @@
-#Esto es para que ovito y matplotlib funcionen correctamente
-import os
-os.environ['OVITO_GUI_MODE'] = '1'
+'''
+En este archivo se encuentran las funciones count_bonds_and_clusters() y non_affine_sq_disp()
+count_bonds_and_clusters() calcula el numero de bonds, numero de clusters y tamaño del cluster más grande con respecto al tiempo. 
+non_affine_sq_disp() calcula el non affine squared displacement del sistema con respecto al tiempo. Toma como referencia el frame 0. 
 
-#Importar librerias
-from ovito.io import import_file
-from ovito.modifiers import ClusterAnalysisModifier, CreateBondsModifier
-import numpy as np
-import matplotlib.pyplot as plt 
+El main() da la opcion de especificar los directorios de dumps arbitrarios para realizar este analisis y hacer graficas. 
+'''
+def count_bonds_and_clusters(dumpdir):
+    from ovito.io import import_file
+    from ovito.modifiers import ClusterAnalysisModifier, CreateBondsModifier
+    import numpy as np
 
-input_filefolder = input("Folder directory: ")
-input_filenames = []
-legend = []
-for i in range(3):
-    file = input("Filename (type end to stop): ")
-    if file == "end":
-        break
-    else:
-        input_filenames.append(file)
-        input('Legend: ')
-
-colors = ['red','green','blue']
-markers = ['|','_','.']
-
-plt.figure('bonds_v_t')
-plt.title('Bonds')
-
-plt.figure('clusternum_v_t')
-plt.title('Number of clusters')
-
-plt.figure('clustersize_v_t')
-plt.title('Biggest cluster size')
-
-for k,file in enumerate(input_filenames):
-    node = import_file(input_filefolder+"/"+file)
+    node = import_file(dumpdir)
 
     #Obtener numero de iteraciones
     iter_num = node.source.num_frames
@@ -74,31 +52,106 @@ for k,file in enumerate(input_filenames):
         clusternum_v_t.append(data.attributes["ClusterAnalysis.cluster_count"])
         bigclustersz_v_t.append(data.attributes["ClusterAnalysis.largest_size"])
 
-    plt.figure('bonds_v_t')
-    plt.plot(x,bonds_v_t,c=colors[k],marker=markers[k],fillstyle='none',linestyle='None')
+    return bonds_v_t,clusternum_v_t,bigclustersz_v_t,x
 
-    plt.figure('clusternum_v_t')
-    plt.plot(x,clusternum_v_t,c=colors[k],marker=markers[k],fillstyle='none',linestyle='None')
+def non_affine_sq_disp(dumpdir):
+    from ovito.io import import_file
+    from ovito.modifiers import SelectTypeModifier,AtomicStrainModifier, DeleteSelectedModifier, UnwrapTrajectoriesModifier
+    from ovito.pipeline import ReferenceConfigurationModifier
+    import numpy as np
 
-    plt.figure('clustersize_v_t')
-    plt.plot(x,bigclustersz_v_t,c=colors[k],marker=markers[k],fillstyle='none',linestyle='None')
+    node = import_file(dumpdir)
 
-plt.figure('bonds_v_t')
-plt.legend(legend)
-plt.xlabel('Time')
-plt.ylabel('Number of bonds')
+    #Obtener numero de iteraciones
+    iter_num = node.source.num_frames
 
-plt.figure('clusternum_v_t')
-plt.legend(legend)
-plt.xlabel('Time')
-plt.ylabel('Number of clusters')
+    x = np.arange(iter_num-1)
 
-plt.figure('clustersize_v_t')
-plt.legend(legend)
-plt.xlabel('Time')
-plt.ylabel('Number of atoms in biggest cluster')
+    #Seleccionar patches
+    selectpatches = SelectTypeModifier(operate_on = "particles",
+                                        property = "Particle Type",
+                                        types = {2,4})
+    node.modifiers.append(selectpatches)
 
-plt.show()
+    #Eliminar patches
+    deletepatches = DeleteSelectedModifier()
+    node.modifiers.append(deletepatches)
+
+    #Unwrap trajectories
+    unwrap = UnwrapTrajectoriesModifier()
+    node.modifiers.append(unwrap)
+
+    #Non affine square displacement
+    atomic_strain1 = AtomicStrainModifier(output_nonaffine_squared_displacements=True,
+                                        affine_mapping = ReferenceConfigurationModifier.AffineMapping.ToReference,
+                                        use_frame_offset = False,
+                                        minimum_image_convention = False)
+    
+    node.modifiers.append(atomic_strain1)
+
+    Dsq_v_t = []
+    for i in range(1,iter_num):
+        data=node.compute(i)
+        per_particle_dsq = data.particles["Nonaffine Squared Displacement"]
+        Dsq_v_t.append(sum(per_particle_dsq)/len(per_particle_dsq))
+
+    return Dsq_v_t,x
+
+
+def main():
+    #Esto es para que ovito y matplotlib funcionen correctamente
+    import os
+    os.environ['OVITO_GUI_MODE'] = '1'
+
+    import numpy as np
+    import matplotlib.pyplot as plt 
+    import sys
+
+    input_filedir = sys.argv[1:]
+
+    colors = ['red','green','blue']
+    markers = ['|','_','.']
+
+    fig1,ax1 = plt.subplots()
+    ax1.set_title('Bonds')
+    ax1.legend(input_filedir)
+    ax1.set_xlabel('Time')
+    ax1.set_ylabel('Number of bonds')
+
+    fig2,ax2 = plt.subplots()
+    ax2.set_title('Number of clusters')
+    ax2.legend(input_filedir)
+    ax2.set_xlabel('Time')
+    ax2.set_ylabel('Number of clusters')
+
+    fig3,ax3 = plt.subplots()
+    ax3.set_title('Biggest cluster size')
+    ax3.legend(input_filedir)
+    ax3.set_xlabel('Time')
+    ax3.set_ylabel('Number of atoms in biggest cluster')
+
+    fig4,ax4 = plt.subplots()
+    ax4.set_title('Non affine sq displacement')
+    ax4.legend(input_filedir)
+    ax4.set_xlabel('Time')
+    ax4.set_ylabel('$D^2$')  
+
+    for k,file in enumerate(input_filedir):
+
+        bonds_v_t,clusternum_v_t,bigclustersz_v_t,x1 = count_bonds_and_clusters(file)
+        D_sq_v_t,x2 = non_affine_sq_disp(file)
+        
+        ax1.plot(x1,bonds_v_t,c=colors[k],marker=markers[k],fillstyle='none',linestyle='None')
+        ax2.plot(x1,clusternum_v_t,c=colors[k],marker=markers[k],fillstyle='none',linestyle='None')
+        ax3.plot(x1,bigclustersz_v_t,c=colors[k],marker=markers[k],fillstyle='none',linestyle='None')
+        ax4.plot(x2,D_sq_v_t,c=colors[k],marker=markers[k],fillstyle='none',linestyle='None')
+
+    plt.show()
+
+if __name__=="__main__":
+    main()
+
+
 
 
 
