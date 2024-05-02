@@ -97,7 +97,6 @@ def non_affine_sq_disp(dumpdir):
 
     return Dsq_v_t,x
 
-
 def main():
     #Esto es para que ovito y matplotlib funcionen correctamente
     import os
