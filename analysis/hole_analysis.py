@@ -59,24 +59,30 @@ def hole_analysys_box(dumpdir):
             r = r+T #generar traslacion
 
             #Asegurar que todas las particulas esten dentro de la caja (condiciones periodicas). 
-            r[:,0] = r[:,0] - xy*r[:,1]/L #shear inverso
+            r[:,0] = r[:,0] - (xy/L)*r[:,1] #shear inverso
             for i in range(n_centers):
                 for j in range(3):
                     if r[i,j] >= L:
                         r[i,j] -= L
-                    elif r[i,j] <= 0:
+                    elif r[i,j] < 0:
                         r[i,j] +=L
-            r[:,0] = r[:,0] + xy*r[:,1]/L #shear 
-            
+            r[:,0] = r[:,0] + (xy/L)*r[:,1] #shear 
+
             #Mapeo a caja central
             for i in range(n_centers):
-                if r[i,0] >=L:
+                if r[i,0] >= L:
                     r[i,0] -= L
-                elif r[i,0] <= 0:
+                elif r[i,0] < 0:
                     r[i,0] += L
-
+            '''
+            #Revisar
+            for i in range(n_centers):
+                if r[i,0]==L or r[i,1]==L or r[i,2]==L:
+                    print(L)
+                    print(f'particula {i} en orilla. coordenadas {r[i,0]} {r[i,1]} {r[i,2]}')
+            '''
             #Generar rran 
-            rrand_num = 50000
+            rrand_num = 100000
             rran = np.random.rand(rrand_num,3)
             rran = L*rran
          
@@ -86,11 +92,12 @@ def hole_analysys_box(dumpdir):
             neighs = atomtree.query(rran,k=1) #Realizar busqueda
             #print('search done. initialize cleaning')
             current_distr = neighs[0].tolist() #Convertir a lista de python
+            particle_rad = 2**(1/6)
             for i in range(len(current_distr)): 
-                if current_distr[i] < 0.5: #Si la distancia es menor a 0.5, esta "dentro" de una particula
+                if current_distr[i] < particle_rad: #Si la distancia es menor a 0.5, esta "dentro" de una particula
                     current_distr[i] = None #Quitar valor
                 else:
-                    current_distr[i] -= 0.5 #Si la distancia es mayor a 0.5, esta fuera de un esfera y representa un "hueco"
+                    current_distr[i] -= particle_rad #Si la distancia es mayor a 0.5, esta fuera de un esfera y representa un "hueco"
             current_distr = [i for i in current_distr if i is not None] #Quitar Nones 
             #print('cleaning done')
             distr.append(current_distr) #Guardar distancias a primer vecino en distr
@@ -119,6 +126,8 @@ def main():
     ax1.hist(distr[-1],bins=bin,histtype='step',label='Ultimo frame')
     ax1.legend()
     ax1.set_title('Distribuciones de huecos')
+    ax1.set_xlabel('Tamaño de hueco')
+    ax1.set_ylabel('Numero de huecos')
 
     ax2.scatter(calc_frames,ave)
     ax2.set_title("Radio promedio de hueco")
