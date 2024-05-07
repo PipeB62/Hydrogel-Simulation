@@ -44,7 +44,7 @@ def main():
             pres_data.append(data[:,4]) #Exportar componente xy de presion y agregar a la lista pres_data
 
             #---Bonds,Clusters---#
-            bonds_v_t,clusternum_v_t = count_bonds_and_clusters(f"{directory}/{n}k_particles/exp{i+1}/dump_shearing_{n}k_{i+1}.lammpstrj")
+            bonds_v_t,clusternum_v_t,_,_ = count_bonds_and_clusters(f"{directory}/{n}k_particles/exp{i+1}/dump_shearing_{n}k_{i+1}.lammpstrj")
             bonds_data.append(bonds_v_t) #Agregar experimento actual a bonds_data
             clusters_data.append(clusternum_v_t) #Agregar experimento actual a clusters_data
             print(f'{n}k exp{i} done')
@@ -104,7 +104,6 @@ def main():
     '''
     #Grafica superposicion stres-strain con bonds 16k 
     fig4,ax4 = plt.subplots()
-    #fig1.subplots_adjust(right=0.15)         
     ax4.plot(x,pres_average[3],color='blue')          
     ax4.set_ylabel('$\sigma_{xy}$', color='blue')
     ax4.tick_params(axis='y', colors='blue')

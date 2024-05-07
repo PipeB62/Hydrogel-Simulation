@@ -135,6 +135,8 @@ def main():
     ax4.set_xlabel('Time')
     ax4.set_ylabel('$D^2$')  
 
+    fig5,ax5 = plt.subplots(3,1,sharex=True)
+
     for k,file in enumerate(input_filedir):
 
         bonds_v_t,clusternum_v_t,bigclustersz_v_t,x1 = count_bonds_and_clusters(file)
@@ -144,6 +146,9 @@ def main():
         ax2.plot(x1,clusternum_v_t,c=colors[k],marker=markers[k],fillstyle='none',linestyle='None')
         ax3.plot(x1,bigclustersz_v_t,c=colors[k],marker=markers[k],fillstyle='none',linestyle='None')
         ax4.plot(x2,D_sq_v_t,c=colors[k],marker=markers[k],fillstyle='none',linestyle='None')
+        ax5[0].plot(x1,bonds_v_t,c=colors[k],marker=markers[k],fillstyle='none',linestyle='None')
+        ax5[1].plot(x1,clusternum_v_t,c=colors[k],marker=markers[k],fillstyle='none',linestyle='None')
+        ax5[2].plot(x1,D_sq_v_t,c=colors[k],marker=markers[k],fillstyle='none',linestyle='None')
 
     plt.show()
 
