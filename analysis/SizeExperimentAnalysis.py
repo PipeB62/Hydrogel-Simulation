@@ -80,7 +80,7 @@ def main():
     ax2.set_xscale('log')
     ax2.set_yscale('log')
     for i in range(4):
-        ax2.plot(x,pres_average[i])
+        ax2.scatter(x,pres_average[i])
     ax2.set_title("Stress-Strain. $\dot{\gamma}=0.01$. log-log")
     ax2.set_xlabel("$\gamma$")
     ax2.set_ylabel("$\sigma_{xy}$")

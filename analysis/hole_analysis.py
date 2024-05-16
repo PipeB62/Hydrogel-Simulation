@@ -108,6 +108,9 @@ def hole_analysys_box(dumpdir):
     
     return distr,ave,hole_num,calc_frames
 
+def hole_analysis_lines(dumpdir):
+    pass
+
 def main():
     import sys
     import matplotlib.pyplot as plt
@@ -115,12 +118,14 @@ def main():
 
     dumpdir = sys.argv[1]
     distr,ave,hole_num,calc_frames = hole_analysys_box(dumpdir)
+    big_r = [max(k) for k in distr]
 
     bin = np.linspace(0,7,50)
 
     fig1,ax1 = plt.subplots()
     fig2,ax2 = plt.subplots()
     fig3,ax3 = plt.subplots()
+    fig4,ax4 = plt.subplots()
 
     ax1.hist(distr[0],bins=bin,histtype='step',label='Primer frame')
     ax1.hist(distr[-1],bins=bin,histtype='step',label='Ultimo frame')
@@ -138,6 +143,11 @@ def main():
     ax3.set_title("Porcentaje de huecos")
     ax3.set_xlabel('Frame')
     ax3.set_ylabel('Porcentaje de huecos')
+
+    ax4.scatter(calc_frames,big_r)
+    ax4.set_title("Radio del hueco mas grande")
+    ax4.set_xlabel('Frame')
+    ax4.set_ylabel('RadioS')
     plt.show()
 
     
