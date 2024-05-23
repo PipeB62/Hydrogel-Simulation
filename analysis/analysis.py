@@ -9,6 +9,7 @@ def count_bonds_and_clusters(dumpdir):
     from ovito.io import import_file
     from ovito.modifiers import ClusterAnalysisModifier, CreateBondsModifier
     import numpy as np
+    import json
 
     node = import_file(dumpdir)
 
@@ -51,14 +52,31 @@ def count_bonds_and_clusters(dumpdir):
         data=node.compute(i)
         clusternum_v_t.append(data.attributes["ClusterAnalysis.cluster_count"])
         bigclustersz_v_t.append(data.attributes["ClusterAnalysis.largest_size"])
+    
+    dir = dumpdir.split('/')
+    dir[-1] = "analysis_results"
+    savedir = '/'.join(dir)
 
-    return bonds_v_t,clusternum_v_t,bigclustersz_v_t,x
+    print('Esribiendo resultados en archivos json')
+    with open (f'{savedir}/analysis_bonds_v_t.json','w') as f:
+        json.dump(bonds_v_t,f)
+    with open (f'{savedir}/analysis_clusternum_v_t.json','w') as f:
+        json.dump(clusternum_v_t,f)
+    with open (f'{savedir}/analysis_bigclustersz_v_t.json','w') as f:
+        json.dump(bigclustersz_v_t,f)
+    x = x.tolist()
+    with open (f'{savedir}/analysis_x1.json','w') as f:
+        json.dump(x,f)
+    print('FIN')
+
+    #return bonds_v_t,clusternum_v_t,bigclustersz_v_t,x
 
 def non_affine_sq_disp(dumpdir):
     from ovito.io import import_file
     from ovito.modifiers import SelectTypeModifier,AtomicStrainModifier, DeleteSelectedModifier, UnwrapTrajectoriesModifier
     from ovito.pipeline import ReferenceConfigurationModifier
     import numpy as np
+    import json
 
     node = import_file(dumpdir)
 
@@ -95,62 +113,29 @@ def non_affine_sq_disp(dumpdir):
         per_particle_dsq = data.particles["Nonaffine Squared Displacement"]
         Dsq_v_t.append(sum(per_particle_dsq)/len(per_particle_dsq))
 
-    return Dsq_v_t,x
+    dir = dumpdir.split('/')
+    dir[-1] = "analysis_results"
+    savedir = '/'.join(dir)
+
+    print('Esribiendo resultados en archivos json')
+    with open (f'{savedir}/analysis_Dsq_v_t.json','w') as f:
+        json.dump(Dsq_v_t,f)
+    x = x.tolist()
+    with open (f'{savedir}/analysis_x2.json','w') as f:
+        json.dump(x,f)
+    print('FIN')
+
+    #return Dsq_v_t,x
 
 def main():
-    #Esto es para que ovito y matplotlib funcionen correctamente
-    import os
-    os.environ['OVITO_GUI_MODE'] = '1'
-
-    import numpy as np
-    import matplotlib.pyplot as plt 
     import sys
 
-    input_filedir = sys.argv[1:]
+    dumpdir = sys.argv[1]
 
-    colors = ['red','green','blue']
-    markers = ['|','_','.']
-
-    fig1,ax1 = plt.subplots()
-    ax1.set_title('Bonds')
-    ax1.legend(input_filedir)
-    ax1.set_xlabel('Time')
-    ax1.set_ylabel('Number of bonds')
-
-    fig2,ax2 = plt.subplots()
-    ax2.set_title('Number of clusters')
-    ax2.legend(input_filedir)
-    ax2.set_xlabel('Time')
-    ax2.set_ylabel('Number of clusters')
-
-    fig3,ax3 = plt.subplots()
-    ax3.set_title('Biggest cluster size')
-    ax3.legend(input_filedir)
-    ax3.set_xlabel('Time')
-    ax3.set_ylabel('Number of atoms in biggest cluster')
-
-    fig4,ax4 = plt.subplots()
-    ax4.set_title('Non affine sq displacement')
-    ax4.legend(input_filedir)
-    ax4.set_xlabel('Time')
-    ax4.set_ylabel('$D^2$')  
-
-    fig5,ax5 = plt.subplots(3,1,sharex=True)
-
-    for k,file in enumerate(input_filedir):
-
-        bonds_v_t,clusternum_v_t,bigclustersz_v_t,x1 = count_bonds_and_clusters(file)
-        D_sq_v_t,x2 = non_affine_sq_disp(file)
-        
-        ax1.plot(x1,bonds_v_t,c=colors[k],marker=markers[k],fillstyle='none',linestyle='None')
-        ax2.plot(x1,clusternum_v_t,c=colors[k],marker=markers[k],fillstyle='none',linestyle='None')
-        ax3.plot(x1,bigclustersz_v_t,c=colors[k],marker=markers[k],fillstyle='none',linestyle='None')
-        ax4.plot(x2,D_sq_v_t,c=colors[k],marker=markers[k],fillstyle='none',linestyle='None')
-        ax5[0].plot(x1,bonds_v_t,c=colors[k],marker=markers[k],fillstyle='none',linestyle='None')
-        ax5[1].plot(x1,clusternum_v_t,c=colors[k],marker=markers[k],fillstyle='none',linestyle='None')
-        ax5[2].plot(x1,D_sq_v_t,c=colors[k],marker=markers[k],fillstyle='none',linestyle='None')
-
-    plt.show()
+    print('Iniciando analisis')
+    count_bonds_and_clusters(dumpdir)
+    non_affine_sq_disp(dumpdir)
+    print('FIN')
 
 if __name__=="__main__":
     main()

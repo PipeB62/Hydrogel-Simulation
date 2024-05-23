@@ -3,6 +3,7 @@ def hole_analysis_pores(dumpdir):
     import numpy as np
     from random import random
     from scipy.spatial import KDTree
+    import json 
 
     #obtener numero de frames
     frame_num = 0
@@ -105,13 +106,32 @@ def hole_analysis_pores(dumpdir):
             hole_num.append(len(current_distr)/rrand_num) #Guardar numero de huecos
 
     dump.close()   
-    
-    return distr,ave,hole_num,calc_frames
+
+    dir = dumpdir.split('/')
+    dir[-1] = "hole_analysis_results"
+    savedir = '/'.join(dir)
+
+    print('Esribiendo resultados en archivos json')
+    with open (f'{savedir}/hole_analysis_pores_distr.json','w') as f:
+        json.dump(distr,f)
+    with open (f'{savedir}/hole_analysis_pores_ave.json','w') as f:
+        json.dump(ave,f)
+    with open (f'{savedir}/hole_analysis_pores_hole_num.json','w') as f:
+        json.dump(hole_num,f)
+    calc_frames = calc_frames.tolist()
+    with open (f'{savedir}/hole_analysis_pores_calc_frames.json','w') as f:
+        json.dump(calc_frames,f)
+    print('FIN')
+
+    #return distr,ave,hole_num,calc_frames
+
+
 
 def hole_analysis_lines(dumpdir):
     import numpy as np
     from random import random
     from scipy.spatial import KDTree
+    import json
 
     #obtener numero de frames
     frame_num = 0
@@ -188,45 +208,22 @@ def hole_analysis_lines(dumpdir):
                     r[i,0] += L
 
             particle_rad = 2**(1/6)
-            sample_size = 50000
+            sample_size = 100000
 
             current_distr = []
             current_sample_distr = []
-
+            
+            print('start for')
             for ss in range(sample_size):
+                if ss%1000 ==0:
+                    print(ss/1000)
                 #Generar linea 
-                #metodo1
                 line_points = L*np.random.rand(2,3)
                 l21 = line_points[1,:]-line_points[0,:]
                 l_len = np.linalg.norm(l21)
                 lu21 = l21/l_len
                 current_sample_distr.append(l_len)
-
-                #metodo2
-                '''
-                i = np.random.randint(n_centers)
-                j = i
-                while i == j:
-                    j = np.random.randint(n_centers)
-                line_points = np.zeros((2,3))
-                check = 0
-                while check == 0:
-                    eu1 = np.random.random_sample((1,3))
-                    eu1 = eu1/np.linalg.norm(eu1)
-                    eu2 = np.random.random_sample((1,3))
-                    eu2 = eu2/np.linalg.norm(eu2)
-                    line_points[0,:] = r[i,:] + 0.5*eu1
-                    line_points[1,:] = r[j,:] + 0.5*eu2
-                    if np.any(np.logical_or(line_points>L,line_points<0)):
-                        check = 0
-                    else:
-                        check = 1
-                l21 = line_points[1,:]-line_points[0,:]
-                l_len = np.linalg.norm(l21)
-                lu21 = l21/l_len
-                current_sample_distr.append(l_len)
-                '''
-
+                
                 #Obtener vectores que inician en las orillas de la linea y terminan en cada particula
                 ri1 = r - line_points[0,:] 
                 ri2 = r - line_points[1,:] 
@@ -235,15 +232,17 @@ def hole_analysis_lines(dumpdir):
                 ri1_d_lu21 = np.matmul(ri1,np.transpose(lu21))
                 ri2_d_lu12 = np.matmul(ri2,np.transpose(-lu21))
                 aa = np.logical_and(ri1_d_lu21>0,ri2_d_lu12>0)
-
+                
                 #Medir distancia perpendicular a linea y determinar si hay colision
                 g = ri1[aa,:] - np.outer(ri1_d_lu21[aa],lu21)
                 g_norm = np.linalg.norm(g,axis=1)
-
                 if np.any(g_norm<particle_rad):
                     continue
                 else:
                     current_distr.append(l_len)
+                
+
+            print('end for')
 
             distr.append(current_distr)
             ave.append(np.average(current_distr)) #Guardar promedios
@@ -252,9 +251,32 @@ def hole_analysis_lines(dumpdir):
             
             sample_hist,bin = np.histogram(current_sample_distr,bins=50)
             hole_hist,trsh = np.histogram(current_distr,bins=bin)
-            prob_distr.append(np.divide(hole_hist,sample_hist))
+            prob_distr.append(np.divide(hole_hist,sample_hist).tolist())
     
-    return distr,ave,hole_num,calc_frames,sample_distr,prob_distr,bin
+    dir = dumpdir.split('/')
+    dir[-1] = 'hole_analysis_results'
+    savedir = '/'.join(dir)
+
+    print('Esribiendo resultados en archivos json')
+    with open (f'{savedir}/hole_analysis_lines_distr.json','w') as f:
+        json.dump(distr,f)
+    with open (f'{savedir}/hole_analysis_lines_ave.json','w') as f:
+        json.dump(ave,f)
+    with open (f'{savedir}/hole_analysis_lines_hole_num.json','w') as f:
+        json.dump(hole_num,f)
+    calc_frames = calc_frames.tolist()
+    with open (f'{savedir}/hole_analysis_lines_calc_frames.json','w') as f:
+        json.dump(calc_frames,f)
+    with open (f'{savedir}/hole_analysis_lines_sample_distr.json','w') as f:
+        json.dump(sample_distr,f)
+    with open (f'{savedir}/hole_analysis_lines_prob_distr.json','w') as f:
+        json.dump(prob_distr,f)
+    bin = bin.tolist()
+    with open (f'{savedir}/hole_analysis_lines_bin.json','w') as f:
+        json.dump(bin,f)
+    print('FIN')
+
+    #return distr,ave,hole_num,calc_frames,sample_distr,prob_distr,bin
 
 
 
@@ -265,60 +287,13 @@ def main():
 
     dumpdir = sys.argv[1]
 
-    #distr,ave,hole_num,calc_frames = hole_analysis_pores(dumpdir)
-    distr,ave,hole_num,calc_frames,sample_distr,prob_distr,bin1 = hole_analysis_lines(dumpdir)
-    big_r = [max(k) for k in distr]
+    #print('Iniciando analisis con metodo de poros')
+    #hole_analysis_pores(dumpdir)
+    #print('FIN')
 
-    bin = np.linspace(0,90,90)
-
-    fig1,ax1 = plt.subplots()
-    fig2,ax2 = plt.subplots()
-    fig3,ax3 = plt.subplots()
-    fig4,ax4 = plt.subplots()
-    fig5,ax5 = plt.subplots()
-    fig6,ax6 = plt.subplots()
-
-    ax1.hist(distr[0],bins=bin,histtype='step',label='Primer frame')
-    ax1.hist(distr[-1],bins=bin,histtype='step',label='Ultimo frame')
-    ax1.legend()
-    ax1.set_title('Distribuciones de huecos')
-    #ax1.set_xlabel('Tamaño de hueco')
-    ax1.set_xlabel('Longitud de hueco')
-    ax1.set_ylabel('Numero de huecos')
-
-    ax2.scatter(calc_frames,ave)
-    #ax2.set_title("Radio promedio de hueco")
-    ax2.set_title('Longitud promedio de hueco')
-    ax2.set_xlabel('Frame')
-    ax2.set_ylabel('Radio')
-
-    ax3.scatter(calc_frames,hole_num)
-    ax3.set_title("Porcentaje de huecos")
-    ax3.set_xlabel('Frame')
-    ax3.set_ylabel('Porcentaje de huecos')
-
-    ax4.scatter(calc_frames,big_r)
-    #ax4.set_title("Radio del hueco mas grande")
-    ax4.set_title("Longitud del hueco mas grande")
-    ax4.set_xlabel('Frame')
-    ax4.set_ylabel('RadioS')
-
-    ax5.hist(sample_distr[0],bins=bin,histtype='step',label='Primer frame')
-    ax5.hist(sample_distr[-1],bins=bin,histtype='step',label='Ultimo frame')
-    ax5.legend()
-    ax5.set_title('Distribucion de muestreo')
-    ax5.set_xlabel('Longitud de linea')
-    ax5.set_ylabel('Numero de lineas')
-
-    ax6.stairs(prob_distr[0],bin1,label='Primer frame')
-    ax6.stairs(prob_distr[-1],bin1,label='Ultimo frame')
-    ax6.legend()
-    ax6.set_title('Distribucion de probabilidad de huecos')
-    ax6.set_xlabel('Longitud de linea')
-    ax6.set_ylabel('Probabilidad')
-    
-    plt.show()
-    
+    print('Iniciando analisis con metodo de lineas')
+    hole_analysis_lines(dumpdir)
+    print('FIN')
 
 if __name__=="__main__":
     main()
