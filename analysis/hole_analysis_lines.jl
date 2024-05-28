@@ -1,41 +1,51 @@
 using JSON
+using StaticArrays
 
-function dot(u1, u2) 
-    return sum(u1.*u2)
+function cdot(u1::SVector{3,Float64}, u2::SVector{3,Float64}) 
+    sum(u1.*u2)
 end
 
-function norm(u)
-    return sqrt(sum(u.^2))
+function norm(u::SVector{3,Float64})
+    return sqrt(cdot(u,u))
 end
 
 function mean(v::Vector{Float64})
     return sum(v)/length(v)
 end
 
-function test_overlap(r::Array{Float64}, rho::Float64, sample_sz::Int64, L::Float64)
-    current_distr = Array{Float64}([])
-    for k in 1:sample_sz
-        l::Array{Float64} = L.*rand(3,2)
-        ul::Array{Float64} = (l[:,1]-l[:,2])./norm(l[:,1]-l[:,2])
-        overlap = false
-        d_perp::Float64 = 0.0
-        for i in 1:size(r,2)
-            rvec = r[:,i]
-            d_pll2::Float64 = dot(ul, rvec-l[:,2])
-            d_pll1::Float64 = dot(-ul, rvec-l[:,1])
-            if ((d_pll2>0) && (d_pll1>0))        
-                d_perp = norm((rvec-l[:,2]) - ul*dot(ul, rvec-l[:,2])) 
-                if d_perp<rho
-                    overlap = true
-                    break
-                end
-            end
-        end
-        if overlap == false
-            push!(current_distr,d_perp)
+@views function check_overlap(r::SVector{3,Float64},l1::SVector{3,Float64},l2::SVector{3,Float64},rho::Float64)
+    ul = SVector{3,Float64}((l1-l2)/norm(l1-l2))
+    ri1 = SVector{3,Float64}(r-l1)
+    ri2 = SVector{3,Float64}(r-l2)
+    d_pll2::Float64 = cdot(ul, ri2)
+    d_pll1::Float64 = cdot(-ul, ri1)
+    overlap = false
+    if ((d_pll2>0) && (d_pll1>0))        
+        d_perp = norm(ri2 - ul*d_pll2) 
+        if d_perp<rho
+            overlap = true
         end
     end
-    return current_distr
+    return overlap
+end
+
+@views function line_distr(r::Vector{SVector{3,Float64}},sample_sz::Int64,L::Float64,rho::Float64)
+    distr = Vector{Float64}()
+    for _ in 1:sample_sz
+        l1 = L* @SVector rand(Float64,3)
+        l2 = L* @SVector rand(Float64,3)
+        overlap = true
+        for i in 1:size(r,1)
+            overlap = check_overlap(r[i],l1,l2,rho)
+            if overlap
+                break
+            end
+        end
+        if !overlap 
+            push!(distr,norm(l1-l2))
+        end
+    end
+    return distr
 end
 
 #Obtiene el numero de frames en el dump
@@ -72,59 +82,61 @@ end
 
 #Lee las coordenads de las particulas del dump para un frame
 function read_dump_coords(dump,n::Int64)
-    r = Array{Float64}(undef,3,0)
-    for i in 1:n
+    r = Vector{SVector{3,Float64}}()
+    for _ in 1:n
         line = split(readline(dump)," ")
         if line[2] == "2" || line[2] == "4"
             continue
         else
-            ri = Vector{Float64}([parse(Float64,line[ii]) for ii in 3:5])
-            r = hcat(r,ri)
+            ri = @SVector [parse(Float64,line[ii]) for ii in 3:5]
+            push!(r,ri)
         end
     end
     return r
 end
 
 #Aplica una traslacion diagonal para mover el centro a la esquina de la caja
-function traslacion(r::Array{Float64},T::Float64)
-    for i in 1:3
-        for j in 1:size(r)[2]
-            r[i,j] = r[i,j] + T
-        end
+function traslacion(r::Vector{SVector{3,Float64}},T::Float64)
+    for i in eachindex(r)    
+        r[i] = r[i] + SVector{3,Float64}(T,T,T)
     end
     return r
 end
 
 #Aplica el shear a todas las particulas
-function shear(r::Array{Float64},xy::Float64,L::Float64)
-    for i in 1:size(r)[2]
-        r[1,i] = r[1,i] + (xy/L)*r[2,i]
+function shear(r::Vector{SVector{3,Float64}},xy::Float64,L::Float64)
+    M = SMatrix{3,3,Float64}(1,0,0,xy/L,1,0,0,0,1)
+    for i in eachindex(r)
+        r[i] = M*r[i]
     end
     return r
 end
 
 #Asegura que todas las particulas esten dentro de la caja
-function wrap_boundaries(r::Array{Float64},L::Float64)
-    for i in 1:3
-        for j in 1:size(r)[2]
-            if r[i,j] >= L 
-                r[i,j] -= L 
-            elseif r[i,j] < 0
-                r[i,j] += L 
+function wrap_boundaries(r::Vector{SVector{3,Float64}},L::Float64)
+    for i in eachindex(r)
+        ri = r[i]
+        t = MVector{3,Float64}(0.0,0.0,0.0)
+        for j in 1:3
+            if ri[j] >= L 
+                t[j] = -L 
+            elseif ri[j] < 0
+                t[j] = L 
             end
         end
+        r[i] = ri + t
     end
     return r
 end
 
 #Hace el shear inverso, asegura que todas las particulas esten dentro de la caja y regresa el shear.
-function fix_boundaries(r::Array{Float64},xy::Float64,L::Float64)
-    r1 = traslacion(r,L/2)
-    r2 = shear(r1,-xy,L)
-    r3 = wrap_boundaries(r2,L)
-    r4 = shear(r3,xy,L)
-    r5 = wrap_boundaries(r4,L)
-    return r5
+function fix_boundaries(r::Vector{SVector{3,Float64}},xy::Float64,L::Float64)
+    r = traslacion(r,L/2) #Mover origen a orilla de la caja
+    r = shear(r,-xy,L) #Aplicar el shear inverso
+    r = wrap_boundaries(r,L) #Asegurar que todas las particulas esten dentro de la caja
+    r = shear(r,xy,L) #Revertir el shear
+    r = wrap_boundaries(r,L) #Mapeo a caja central
+    return r
 end
 
 #Guarda los datos en un archivo json
@@ -144,7 +156,7 @@ calc_frames_num = 50
 calc_frames_step = floor(frame_num/calc_frames_num)
 calc_frames = 1:calc_frames_step:frame_num
 
-sample_sz = 100000
+sample_sz = 1000000
 rho = 2^(1/6)
 
 dump = open(dumpdir,"r")
@@ -158,20 +170,23 @@ for frame in 1:frame_num
 
     #Analisis de huecos
     if frame in calc_frames
-        println("$(frame) ")
+        println("Frame:","$(frame) ")
 
         #Leer info de atomos y quitar patches
+        println("Leyendo datos...")
         r = read_dump_coords(dump,n)
 
         #Asegurar que todas las particulas esten dentro de la caja (condiciones periodicas) y mapeo a caja central. 
         r = fix_boundaries(r,xy,L)
 
         #Obtener distribucion de frame actual y guardar en distr
-        current_distr = test_overlap(r,rho,sample_sz,L)
+        println("Calculando...")
+        current_distr = line_distr(r,sample_sz,L,rho)
         push!(distr, current_distr)
         push!(ave, mean(current_distr))
         push!(hole_num, length(current_distr)/sample_sz)
-
+        println("Fin")
+        
     else
         for i in 1:n
             readline(dump)
@@ -182,7 +197,7 @@ end
 
 dir = split(dumpdir,"/")
 dir[end] = "hole_analysis_results"
-savedir = join(dir,'/')
+savedir = join(dir,"/")
 
 write_json(savedir,distr,"distr")
 write_json(savedir,ave,"ave")

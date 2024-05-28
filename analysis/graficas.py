@@ -165,12 +165,13 @@ def graficas_hole_analysis_line(dir):
     ax3.set_xlabel('Frame')
     ax3.set_ylabel('Porcentaje de huecos')
 
-    """
+    
     ax4.scatter(calc_frames,big_r)
     ax4.set_title("Longitud del hueco mas grande")
     ax4.set_xlabel('Frame')
-    ax4.set_ylabel('RadioS')
+    ax4.set_ylabel('Longitud')
 
+    """
     ax5.hist(sample_distr[0],bins=bin,histtype='step',label='Primer frame')
     ax5.hist(sample_distr[-1],bins=bin,histtype='step',label='Ultimo frame')
     ax5.legend()
