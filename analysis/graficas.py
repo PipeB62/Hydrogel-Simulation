@@ -1,6 +1,6 @@
 def load_json(dir,name):
     import json
-    with open (f'{dir}/hole_analysis_line_{name}.json') as f:
+    with open (f'{dir}/{name}.json') as f:
         content = json.load(f)
     data = json.loads(content)
     return(data)
@@ -123,11 +123,11 @@ def graficas_hole_analysis_line(dir):
     import matplotlib.pyplot as plt
 
     print('Cargando datos ...')
-    distr = load_json(dir,"distr")
-    ave = load_json(dir,"ave")
-    calc_frames = load_json(dir,"calc_frames")
-    hole_num = load_json(dir,"hole_num")
-    sample_distr = load_json(dir,"sample_distr")
+    distr = load_json(dir,"hole_analysis_line_distr")
+    ave = load_json(dir,"hole_analysis_line_ave")
+    calc_frames = load_json(dir,"hole_analysis_line_calc_frames")
+    hole_num = load_json(dir,"hole_analysis_line_hole_num")
+    sample_distr = load_json(dir,"hole_analysis_line_sample_distr")
 
     print('Generando graficas')
     big_r = [max(k) for k in distr]
@@ -157,8 +157,7 @@ def graficas_hole_analysis_line(dir):
     ax3.set_title("Porcentaje de huecos")
     ax3.set_xlabel('Frame')
     ax3.set_ylabel('Porcentaje de huecos')
-
-    
+  
     ax4.scatter(calc_frames,big_r)
     ax4.set_title("Longitud del hueco mas grande")
     ax4.set_xlabel('Frame')
