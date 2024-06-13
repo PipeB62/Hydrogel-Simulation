@@ -127,15 +127,8 @@ def graficas_hole_analysis_line(dir):
     ave = load_json(dir,"ave")
     calc_frames = load_json(dir,"calc_frames")
     hole_num = load_json(dir,"hole_num")
+    sample_distr = load_json(dir,"sample_distr")
 
-    """
-    with open (f'{dir}/hole_analysis_line_sample_distr.json') as f:
-        sample_distr = json.load(f)
-    with open (f'{dir}/hole_analysis_line_prob_distr.json') as f:
-        prob_distr = json.load(f)
-    with open (f'{dir}/hole_analysis_line_bin.json') as f:
-        bin1 = json.load(f)
-    """
     print('Generando graficas')
     big_r = [max(k) for k in distr]
 
@@ -171,7 +164,6 @@ def graficas_hole_analysis_line(dir):
     ax4.set_xlabel('Frame')
     ax4.set_ylabel('Longitud')
 
-    """
     ax5.hist(sample_distr[0],bins=bin,histtype='step',label='Primer frame')
     ax5.hist(sample_distr[-1],bins=bin,histtype='step',label='Ultimo frame')
     ax5.legend()
@@ -179,24 +171,32 @@ def graficas_hole_analysis_line(dir):
     ax5.set_xlabel('Longitud de linea')
     ax5.set_ylabel('Numero de lineas')
 
+    prob_distr = []
+    for i in range(len(distr)):
+        sample_hist,bin1 = np.histogram(sample_distr[i],bins=50)
+        hole_hist,trsh = np.histogram(distr[i],bins=bin1)
+        prob_distr.append(np.divide(hole_hist,sample_hist).tolist())
+
     ax6.stairs(prob_distr[0],bin1,label='Primer frame')
+    ax6.stairs(prob_distr[10],bin1,label=f'Frame {calc_frames[10]}')
+    ax6.stairs(prob_distr[30],bin1,label=f'Frame {calc_frames[30]}')
     ax6.stairs(prob_distr[-1],bin1,label='Ultimo frame')
     ax6.legend()
     ax6.set_title('Distribucion de probabilidad de huecos')
     ax6.set_xlabel('Longitud de linea')
     ax6.set_ylabel('Probabilidad')
-    """
+
     plt.show()
 
 def main():
     import sys 
     dirs = sys.argv[1:]
 
-    #graficas_analysis_base(dirs)
+    graficas_analysis_base(dirs)
 
     #graficas_hole_analysis_pore(dirs[0])
 
-    graficas_hole_analysis_line(dirs[0]) 
+    #graficas_hole_analysis_line(dirs[0]) 
 
 
 

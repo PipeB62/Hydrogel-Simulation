@@ -83,7 +83,7 @@ def hole_analysis_pores(dumpdir):
                     print(f'particula {i} en orilla. coordenadas {r[i,0]} {r[i,1]} {r[i,2]}')
             '''
             #Generar rran 
-            rrand_num = 100000
+            rrand_num = 1000000
             rran = np.random.rand(rrand_num,3)
             rran = L*rran
          
@@ -93,7 +93,7 @@ def hole_analysis_pores(dumpdir):
             neighs = atomtree.query(rran,k=1) #Realizar busqueda
             #print('search done. initialize cleaning')
             current_distr = neighs[0].tolist() #Convertir a lista de python
-            particle_rad = 2**(1/6)
+            particle_rad = 2**(-5/6)
             for i in range(len(current_distr)): 
                 if current_distr[i] < particle_rad: #Si la distancia es menor a 0.5, esta "dentro" de una particula
                     current_distr[i] = None #Quitar valor
@@ -287,13 +287,13 @@ def main():
 
     dumpdir = sys.argv[1]
 
-    #print('Iniciando analisis con metodo de poros')
-    #hole_analysis_pores(dumpdir)
-    #print('FIN')
-
-    print('Iniciando analisis con metodo de lineas')
-    hole_analysis_lines(dumpdir)
+    print('Iniciando analisis con metodo de poros')
+    hole_analysis_pores(dumpdir)
     print('FIN')
+
+    #print('Iniciando analisis con metodo de lineas')
+    #hole_analysis_lines(dumpdir)
+    #print('FIN')
 
 if __name__=="__main__":
     main()
