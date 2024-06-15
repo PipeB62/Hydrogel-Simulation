@@ -149,64 +149,67 @@ function write_json(savedir,data,name)
     end
 end
 
-#obtener numero de frames
-dumpdir = ARGS[1] 
+function main()
+    #obtener numero de frames
+    dumpdir = ARGS[1] 
 
-frame_num = read_frame_num(dumpdir)
+    frame_num = read_frame_num(dumpdir)
 
-calc_frames_num = 50
-calc_frames_step = floor(frame_num/calc_frames_num)
-calc_frames = 1:calc_frames_step:frame_num
+    calc_frames_num = 50
+    calc_frames_step = floor(frame_num/calc_frames_num)
+    calc_frames = 1:calc_frames_step:frame_num
 
-sample_sz = 1_000_000
-rho = 2^(-5/6)
+    sample_sz = 1_000_000
+    rho = 2^(-5/6)
 
-dump = open(dumpdir,"r")
+    dump = open(dumpdir,"r")
 
-distr = Vector{Vector{Float64}}()
-ave = Vector{Float64}()
-hole_num = Vector{Float64}()
-sample_distr = Vector{Vector{Float64}}()
-for frame in 1:frame_num
+    distr = Vector{Vector{Float64}}()
+    ave = Vector{Float64}()
+    hole_num = Vector{Float64}()
+    sample_distr = Vector{Vector{Float64}}()
+    for frame in 1:frame_num
 
-    timestep,n,L,xy = read_dump_info(dump)
+        timestep,n,L,xy = read_dump_info(dump)
 
-    #Analisis de huecos
-    if frame in calc_frames
-        println("Frame:","$(frame) ")
+        #Analisis de huecos
+        if frame in calc_frames
+            println("Frame:","$(frame) ")
 
-        #Leer info de atomos y quitar patches
-        println("Leyendo datos...")
-        r = read_dump_coords(dump,n)
+            #Leer info de atomos y quitar patches
+            println("Leyendo datos...")
+            r = read_dump_coords(dump,n)
 
-        #Asegurar que todas las particulas esten dentro de la caja (condiciones periodicas) y mapeo a caja central. 
-        r = fix_boundaries(r,xy,L)
+            #Asegurar que todas las particulas esten dentro de la caja (condiciones periodicas) y mapeo a caja central. 
+            r = fix_boundaries(r,xy,L)
 
-        #Obtener distribucion de frame actual y guardar en distr
-        println("Calculando...")
-        current_distr,current_sample_distr = line_distr(r,sample_sz,L,rho)
-        push!(distr,current_distr)
-        push!(ave,mean(current_distr))
-        push!(hole_num,length(current_distr)/sample_sz)
-        push!(sample_distr,current_sample_distr)
-        println("Fin")
-    else
-        for _ in 1:n
-            readline(dump)
+            #Obtener distribucion de frame actual y guardar en distr
+            println("Calculando...")
+            current_distr,current_sample_distr = line_distr(r,sample_sz,L,rho)
+            push!(distr,current_distr)
+            push!(ave,mean(current_distr))
+            push!(hole_num,length(current_distr)/sample_sz)
+            push!(sample_distr,current_sample_distr)
+            println("Fin")
+        else
+            for _ in 1:n
+                readline(dump)
+            end
         end
+
     end
 
+    dir = split(dumpdir,"/")
+    dir[end] = "hole_analysis_results"
+    savedir = join(dir,"/")
+
+    write_json(savedir,distr,"distr")
+    write_json(savedir,ave,"ave")
+    write_json(savedir,calc_frames,"calc_frames")
+    write_json(savedir,hole_num,"hole_num")
+    write_json(savedir,sample_distr,"sample_distr")
+
+    close(dump)
 end
 
-dir = split(dumpdir,"/")
-dir[end] = "hole_analysis_results"
-savedir = join(dir,"/")
-
-write_json(savedir,distr,"distr")
-write_json(savedir,ave,"ave")
-write_json(savedir,calc_frames,"calc_frames")
-write_json(savedir,hole_num,"hole_num")
-write_json(savedir,sample_distr,"sample_distr")
-
-
-close(dump)
+main()

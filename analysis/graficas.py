@@ -1,8 +1,9 @@
 def load_json(dir,name):
     import json
     with open (f'{dir}/{name}.json') as f:
-        content = json.load(f)
-    data = json.loads(content)
+        data = json.load(f)
+    if isinstance(data,str):
+        data = json.loads(data)
     return(data)
 
 def graficas_analysis_base(dirs):
@@ -187,15 +188,35 @@ def graficas_hole_analysis_line(dir):
 
     plt.show()
 
+def graficas2():
+    import numpy as np
+    import matplotlib.pyplot as plt
+
+    dir = "/media/felipe/Files/Hydrogel_sim_experiments/SizeExperiments/16k_particles/averaged_data"
+    stress_v_t_ave = [-i for i in load_json(dir,"stress_v_t_ave")]
+    strain = load_json(dir,"strain")
+    for i,x in enumerate(strain):
+        if x < 0:
+            strain[i] = x+1
+    strain.pop(0)
+
+    fig1,ax1 = plt.subplots()
+    ax1.scatter(strain[:100],stress_v_t_ave[:100])
+
+    plt.show()
+
+
 def main():
     import sys 
     dirs = sys.argv[1:]
 
-    graficas_analysis_base(dirs)
+    #graficas_analysis_base(dirs)
 
     #graficas_hole_analysis_pore(dirs[0])
 
     #graficas_hole_analysis_line(dirs[0]) 
+
+    graficas2()
 
 
 

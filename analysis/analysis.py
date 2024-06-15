@@ -127,14 +127,50 @@ def non_affine_sq_disp(dumpdir):
 
     #return Dsq_v_t,x
 
+def strain(dumpdir):
+    import json
+
+    #obtener numero de frames
+    frame_num = 0
+    with open(dumpdir,"r") as dump:
+        for line in dump.readlines():
+            if line == "ITEM: TIMESTEP\n":
+                frame_num+=1
+    
+    dump = open(dumpdir,"r")
+    strain = []
+    for frame in range(frame_num):
+        for i in range(3):
+            dump.readline()
+        atom_num = int(dump.readline())
+        dump.readline()
+        xmin,xmax,xy = [float(x) for x in dump.readline().split()]
+        dump.readline()
+        zmin,zmax,xz = [float(x) for x in dump.readline().split()]
+        dump.readline()
+        for i in range(atom_num):
+            dump.readline()
+        L = zmax-zmin
+        strain.append(xy/L)
+
+    dir = dumpdir.split('/')
+    dir[-1] = "analysis_results"
+    savedir = '/'.join(dir)
+
+    print('Esribiendo resultados en archivos json')
+    with open (f'{savedir}/analysis_strain.json','w') as f:
+        json.dump(strain,f)
+
+
 def main():
     import sys
 
     dumpdir = sys.argv[1]
 
     print('Iniciando analisis')
-    count_bonds_and_clusters(dumpdir)
-    non_affine_sq_disp(dumpdir)
+    #count_bonds_and_clusters(dumpdir)
+    #non_affine_sq_disp(dumpdir)
+    strain(dumpdir)
     print('FIN')
 
 if __name__=="__main__":

@@ -41,7 +41,7 @@ for iter in range(iter_num):
     xls = atoms[np.logical_or(atoms[:,1]==2,atoms[:,1]==4)] #Extraer info de cross-linkers
     xlsnum = np.size(xls[:,0]) #Obtener numero de cross-linkers
 
-    #Extraer info de la boundig box actual. Cambia cada iteracion por la deformacion
+    #Extraer info de la bounding box actual. Cambia cada iteracion por la deformacion
     xlo_bound = boxinfo[0,0] #Extraer xlo_bound
     xhi_bound = boxinfo[0,1] #Extraer xhi_bound
     xy = boxinfo[0,2] #Extraer xy
