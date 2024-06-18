@@ -46,7 +46,7 @@ def main():
         dsq_v_t.append(load_json(dir,"analysis_Dsq_v_t"))
         clusternum_v_t.append(load_json(dir,"analysis_clusternum_v_t"))
         bigclustersz_v_t.append(load_json(dir,"analysis_bigclustersz_v_t"))
-        stress_v_t.append([row[4] for row in load_data(dir2,f"presion_ave_shearing_16k_{exp}.data")])
+        stress_v_t.append([row[4] for row in load_data(dir2,f"presion_ave_shearing_2k_{exp}.data")])
 
     bonds_v_t_ave = average(bonds_v_t)
     dsq_v_t_ave = average(dsq_v_t)

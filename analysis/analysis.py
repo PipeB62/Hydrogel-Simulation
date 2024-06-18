@@ -168,8 +168,8 @@ def main():
     dumpdir = sys.argv[1]
 
     print('Iniciando analisis')
-    #count_bonds_and_clusters(dumpdir)
-    #non_affine_sq_disp(dumpdir)
+    count_bonds_and_clusters(dumpdir)
+    non_affine_sq_disp(dumpdir)
     strain(dumpdir)
     print('FIN')
 
