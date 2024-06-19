@@ -291,9 +291,6 @@ def main():
     hole_analysis_pores(dumpdir)
     print('FIN')
 
-    #print('Iniciando analisis con metodo de lineas')
-    #hole_analysis_lines(dumpdir)
-    #print('FIN')
 
 if __name__=="__main__":
     main()

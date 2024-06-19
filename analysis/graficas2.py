@@ -12,6 +12,7 @@ def derivative(data,step):
         a.append((data[i]-data[i-1])/step)
     return a
 
+#Grafica stress-strain con los datos de analisis comparados verticalmente
 def figura1():
     import numpy as np
     import matplotlib as mpl
@@ -23,7 +24,7 @@ def figura1():
 
     #Directorios con datos
     #dir = "/media/felipe/Files/Hydrogel_sim_experiments/SizeExperiments/16k_particles/averaged_data" #pc escritorio 
-    dir = "D:/ExperimentData/averaged_data" #laptop
+    dir = "D:/ExperimentData/SizeExperiment/16k_particles/averaged_data" #laptop
 
     #importar datos de estres y strain promediados
     stress_v_t_ave = [-i for i in load_json(dir,"stress_v_t_ave")]
@@ -164,10 +165,11 @@ def figura1():
     plt.tick_params(direction='in',which='minor',length=2,right=True,top=True)
     plt.tick_params(direction='in',which='major',length=5,right=True,top=True)
 
-    plt.savefig('D:/ExperimentData/graficas/stress_strain.pdf',dpi=300,bbox_inches='tight')
+    plt.savefig('D:/ExperimentData/SizeExperiment/graficas/stress_strain_analysis.pdf',dpi=300,bbox_inches='tight')
     
     plt.show()
 
+#Grafica de curvas stress strain de diferentes tamaños de sistema
 def figura2():
     import numpy as np
     import matplotlib as mpl
@@ -179,12 +181,103 @@ def figura2():
 
     #Directorios con datos
     #dir = "/media/felipe/Files/Hydrogel_sim_experiments/SizeExperiments/16k_particles/averaged_data" #pc escritorio 
-    dir = "D:/ExperimentData/averaged_data" #laptop
+
+    strain = load_json("D:/ExperimentData/SizeExperiment/16k_particles/averaged_data","strain")
+    for i,x in enumerate(strain):
+        if x < 0:
+            strain[i] = x+1
+    strain.pop(0) #Quitar el frame 0 del strain
+
+    allsigma = []
+    for i in [2,4,8,16]:
+        dir = f"D:/ExperimentData/SizeExperiment/{i}k_particles/averaged_data"
+        allsigma.append([-k for k in load_json(dir,"stress_v_t_ave")])
+    
+    fig,ax = plt.subplots(figsize=(5,5))
+
+    ax.plot(strain[:100],allsigma[0][:100],marker='o',markersize=4,mfc='w',alpha = 0.9,linestyle='-',label="2k particles")
+    ax.plot(strain[:100],allsigma[1][:100],marker='^',markersize=4,mfc='w',alpha = 0.9,linestyle='-',label="4k particles")
+    ax.plot(strain[:100],allsigma[2][:100],marker='D',markersize=4,mfc='w',alpha = 0.9,linestyle='-',label="8k particles")
+    ax.plot(strain[:100],allsigma[3][:100],marker='s',markersize=4,mfc='w',alpha = 0.9,linestyle='-',label="16k particles")
+
+    ax.legend()
+
+    ax.set_xlabel("$\gamma$")
+    ax.set_ylabel("$\sigma_{xy}$")
+
+    ax.minorticks_on()
+    ax.tick_params(direction='in',which='minor',length=2,right=True,top=True)
+    ax.tick_params(direction='in',which='major',length=5,right=True,top=True)
+
+    x1,x2,y1,y2 = 0, 0.2, -0.0025, 0.005
+    axins = ax.inset_axes(
+        [0.55, 0.1, 0.4, 0.3],
+        xlim=(x1, x2), ylim=(y1, y2), xticklabels=[], yticklabels=[])
+    axins.plot(strain[:20],allsigma[0][:20],marker='o',markersize=4,mfc='w',alpha = 0.9,linestyle='-')
+    axins.plot(strain[:20],allsigma[1][:20],marker='^',markersize=4,mfc='w',alpha = 0.9,linestyle='-')
+    axins.plot(strain[:20],allsigma[2][:20],marker='D',markersize=4,mfc='w',alpha = 0.9,linestyle='-')
+    axins.plot(strain[:20],allsigma[3][:20],marker='s',markersize=4,mfc='w',alpha = 0.9,linestyle='-')
+    axins.minorticks_on()
+    axins.tick_params(direction='in',which='minor',length=2,right=True,top=True)
+    axins.tick_params(direction='in',which='major',length=5,right=True,top=True)
+    axins.set_xticks(np.arange(0,0.21,0.2))
+    axins.set_yticks(np.arange(0,0.0051,0.005))
+    ax.indicate_inset_zoom(axins, edgecolor="black")
+
+    plt.savefig('D:/ExperimentData/SizeExperiment/graficas/stress_strain_sizes.pdf',dpi=300,bbox_inches='tight')
+    plt.show()
+
+def figura3():
+    import numpy as np
+    import matplotlib as mpl
+    import matplotlib.pyplot as plt
+    import matplotlib.gridspec as gridspec 
+
+    mpl.rcParams['pdf.fonttype'] = 42
+    mpl.rcParams['font.size'] = 14
+
+    #Directorios con datos
+    #dir = "/media/felipe/Files/Hydrogel_sim_experiments/SizeExperiments/16k_particles/averaged_data" #pc escritorio 
+
+    strain = load_json("D:/ExperimentData/SizeExperiment/16k_particles/averaged_data","strain")
+    for i,x in enumerate(strain):
+        if x < 0:
+            strain[i] = x+1
+    strain.pop(0) #Quitar el frame 0 del strain
+
+    allsigma = []
+    for i in [2,4,8,16]:
+        dir = f"D:/ExperimentData/SizeExperiment/{i}k_particles/averaged_data"
+        allsigma.append([-k for k in load_json(dir,"stress_v_t_ave")])
+    
+    fig,ax = plt.subplots(figsize=(5,5))
+
+    ax.plot(strain[:50],allsigma[0][:50],marker='o',markersize=4,mfc='w',alpha = 0.9,linestyle='--',label="2k particles")
+    ax.plot(strain[:50],allsigma[1][:50],marker='^',markersize=4,mfc='w',alpha = 0.9,linestyle='--',label="4k particles")
+    ax.plot(strain[:50],allsigma[2][:50],marker='D',markersize=4,mfc='w',alpha = 0.9,linestyle='--',label="8k particles")
+    ax.plot(strain[:50],allsigma[3][:50],marker='s',markersize=4,mfc='w',alpha = 0.9,linestyle='--',label="16k particles")
+
+    ax.legend()
+
+    ax.set_xlabel("$\gamma$")
+    ax.set_ylabel("$\sigma_{xy}$")
+
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+
+    ax.minorticks_on()
+    ax.tick_params(direction='in',which='minor',length=2,right=True,top=True)
+    ax.tick_params(direction='in',which='major',length=5,right=True,top=True)
+
+    plt.savefig('D:/ExperimentData/SizeExperiment/graficas/stress_strain_loglog.pdf',dpi=300,bbox_inches='tight')
+    plt.show()
+
 
 
 def main():
     #figura1()
-    figura2()
+    #figura2()
+    figura3()
 
 if __name__ == '__main__':
     main()
