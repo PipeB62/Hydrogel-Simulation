@@ -1,5 +1,6 @@
 from random import randint
 import os 
+import sys
 
 #Obtener direccion de carpeta input_data
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -8,11 +9,7 @@ dir_path_split[-1]="input_data"
 inputfilesdir = "/".join(dir_path_split)
 
 #Pedir al usuario parametros de simulacion
-directory = input("File directory: ")
-last_name = input("File name locator: ")
-shear_rate = float(input("shear_rate = "))
-L = float(input("L (igual a formation) = "))
-temp_ramp = input("Temp ramp? (y/n): ")
+L,shear_rate,temp_ramp,directory,last_name = sys.argv[1:]
 
 #Generar semillas
 seeds = []

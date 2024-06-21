@@ -1,5 +1,6 @@
 from random import randint
 import os 
+import sys
 
 #Obtener direccion de carpeta input_data
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -8,11 +9,7 @@ dir_path_split[-1]="input_data"
 inputfilesdir = "/".join(dir_path_split)
 
 #Pedir al usuario parametros de simulacion
-L = input("L = ")
-xl_num = input("Number of cross-linkers: ")
-mon_num = input("Number of monomers: ")
-directory = input("File directory: ")
-last_name = input("File name locator: ")
+L,xl_num,mon_num,directory,last_name = sys.argv[1:]
 
 #Generar semillas
 seeds = []
@@ -105,10 +102,12 @@ fase1 = (f"fix thermostat all langevin 0.0 {temp} {damp} {seeds[4]} \n"
 
 #fase 2: formacion
 fase2 = (f"fix thermostat all langevin {temp} {temp} {damp} {seeds[5]} \n"
+         "variable a loop 50 \n"
          "label formation_loop \n"
          f"run {itern_num_2} start 0 \n"
          "write_data system_check.data \n"
          "print ${check_percolation} \n"
+         "next a \n"
          'if "${check_percolation} == 1" then "jump SELF bajar_temp" else "jump SELF formation_loop" \n\n')
 
 #fase 3: bajar temperatura
