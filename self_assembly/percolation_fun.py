@@ -1,4 +1,4 @@
-def percolation(directory):
+def percolation(directory,sigma):
     from ovito.io import import_file
     from ovito.modifiers import ClusterAnalysisModifier, CreateBondsModifier, ReplicateModifier
     import numpy as np
@@ -8,37 +8,32 @@ def percolation(directory):
 
     node = import_file(input_filepath)
 
-    node2 = import_file(input_filepath)
-    node2.modifiers.append(ReplicateModifier(adjust_box = True, num_x = 3, num_y = 3, num_z = 3))
-
-    #Obtener numero de iteraciones
-    iter_num = node.source.num_frames
+    node.modifiers.append(ReplicateModifier(adjust_box = True, num_x = 3, num_y = 3, num_z = 3))
 
     #Modificador para crear bonds patch-patch
-    Rlim = 0.5 #Cutoff para crear bonds patch-patch
+    a = 1.5
+    Rlim = sigma*a #Cutoff para crear bonds patch-patch
     create_bonds1 = CreateBondsModifier(mode=CreateBondsModifier.Mode.Pairwise) 
     create_bonds1.set_pairwise_cutoff(2,2,Rlim)
     create_bonds1.set_pairwise_cutoff(2,4,Rlim)
     node.modifiers.append(create_bonds1) #Agregar modificador para crear bonds
-    node2.modifiers.append(create_bonds1) #Agregar modificador para crear bonds
-
-    #Modificador para crear bonds centro-patch
-    Rlim2 = 0.45
-    create_bonds2 = CreateBondsModifier(mode=CreateBondsModifier.Mode.Pairwise) 
-    create_bonds2.set_pairwise_cutoff(1,2,Rlim2)
-    create_bonds2.set_pairwise_cutoff(3,4,Rlim2)
-    node.modifiers.append(create_bonds2) #Agregar modificador para crear bonds
-    node2.modifiers.append(create_bonds2) #Agregar modificador para crear bonds
 
     #Modificador para numero de clusters
-    clusters = ClusterAnalysisModifier(neighbor_mode=ClusterAnalysisModifier.NeighborMode.Bonding,
-                                    sort_by_size = True)
+    clusters = ClusterAnalysisModifier(
+        neighbor_mode=ClusterAnalysisModifier.NeighborMode.Bonding,
+        sort_by_size = True)
     node.modifiers.append(clusters)
-    node2.modifiers.append(clusters)
 
-    bigclustersize = node2.compute().attributes['ClusterAnalysis.cluster_count']
+    data = node.compute()
+    cluster_table = data.tables["clusters"]
+    biggest_cluster_sz = cluster_table["Cluster Size"][0]
+    n_particles = data.particles.count
 
-    return bigclustersize
+    percentage = biggest_cluster_sz/n_particles
+    
+    return percentage
+    
+#print(percolation("/media/felipe/Files/Hydrogel_sim_experiments/SelfAssemby/exp0",0.25))
 
 
 
