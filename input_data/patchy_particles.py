@@ -76,11 +76,11 @@ def main():
         "6 2 4 1 5"
         )
     
-    with open(f"{savedir}/monomer_{l}.mol","w") as file:
+    with open(f"{savedir}/monomer.mol","w") as file:
         file.truncate(0)
         file.writelines(mon)
 
-    with open(f"{savedir}/xlinker_{l}.mol","w") as file:
+    with open(f"{savedir}/xlinker.mol","w") as file:
         file.truncate(0)
         file.writelines(xl)
 

@@ -28,6 +28,7 @@ save_every = 10000
 timestep = 0.002
 temp = 0.05
 damp = 0.1
+damp_cd = 1.0
 iter_num_1 = 500_000
 itern_num_2 = 100_000
 iter_num_3 = 1_000_000
@@ -56,7 +57,7 @@ atom_types = ("mass 1 1.0 \n" #Monomer
 
 #Definir interacciones. centro-centro = lj. xl-xl = patches.sw. threebody para xl-xl-xl
 pair_definitions = ("pair_style hybrid/overlay lj/cut 1.122462 sw threebody off threebody/table\n"
-                    f"pair_coeff * * threebody/table {inputfilesdir}/threebody_{lam}.3b NULL Mon NULL Xl\n"
+                    f"pair_coeff * * threebody/table {inputfilesdir}/threebody.3b NULL Mon NULL Xl\n"
                     f"pair_coeff 2 4 sw {inputfilesdir}/patches.sw NULL Mon NULL Xl\n"
                     f"pair_coeff 2 2 sw {inputfilesdir}/patches.sw NULL Mon NULL Xl\n"
                     "pair_coeff 4 4 none\n"
@@ -77,10 +78,10 @@ bonds_angles = ("bond_style harmonic \n"
 
 #Generar moleculas
 spawn = (f"region spawn_box block -{L/2} {L/2} -{L/2} {L/2} -{L/2} {L/2} \n\n" 
-         f"molecule 1 {inputfilesdir}/monomer_{l}.mol \n" 
-         f"molecule 2 {inputfilesdir}/xlinker_{l}.mol \n\n"
-         f"create_atoms 0 random {xl_num} {seeds[0]} spawn_box mol 2 {seeds[1]} overlap 1.13 maxtry 5000 \n"
-         f"create_atoms 0 random {mon_num} {seeds[2]} spawn_box mol 1 {seeds[3]} overlap 1.13 maxtry 5000 \n\n")
+         f"molecule 1 {inputfilesdir}/monomer.mol \n" 
+         f"molecule 2 {inputfilesdir}/xlinker.mol \n\n"
+         f"create_atoms 0 random {xl_num} {seeds[0]} spawn_box mol 2 {seeds[1]} overlap 1.0 maxtry 5000 \n"
+         f"create_atoms 0 random {mon_num} {seeds[2]} spawn_box mol 1 {seeds[3]} overlap 1.0 maxtry 5000 \n\n")
 
 #Computes dentro de lammps
 computes = ("compute pot_ene all pe \n"
@@ -123,7 +124,7 @@ fase2 = (f"fix thermostat all langevin {temp} {temp} {damp} {seeds[5]} \n"
 
 #fase 3: bajar temperatura
 fase3 = ("label bajar_temp \n"
-         f"fix thermostat all langevin {temp} 0.0 {damp} {seeds[6]} \n"
+         f"fix thermostat all langevin {temp} 0.0 {damp_cd} {seeds[6]} \n"
          f"run {iter_num_3} start 0 \n\n")
 
 #Guardar sistema final

@@ -1294,8 +1294,84 @@ def pot_ene_formation():
 
     plt.show()
 
+def distr_vecinos():
+    import numpy as np
+    import matplotlib as mpl
+    import matplotlib.pyplot as plt
+    import matplotlib.gridspec as gridspec 
+
+    mpl.rcParams['pdf.fonttype'] = 42
+    mpl.rcParams['font.size'] = 14
+
+    mon = [80, 2219, 12578, 3, 0, 0, 0, 0, 0, 0]
+    xl = [0, 9, 95, 489, 525, 2, 0, 0, 0, 0]
+    x = [0,1,2,3,4,5,6,7,8,9]
+
+    fig1,ax1 = plt.subplots(figsize=(5,5))
+    ax1.plot(x,mon,marker='s',markersize=8,mfc='b',alpha = 0.9,linestyle='None',label="Monomers")
+    fig2,ax2 = plt.subplots(figsize=(5,5))
+    ax2.plot(x,xl,marker='o',markersize=8,mfc='b',alpha = 0.9,linestyle='None',label="Cross-linkers")
+
+    #Labels
+    ax1.set_ylabel('Number of monomers')
+    ax1.set_xlabel('Number of neighbors')
+    ax2.set_ylabel('Number of cross-linkers')
+    ax2.set_xlabel('Number of neighbors')
+    #Limites
+
+    #Ticks
+    ax1.set_xticks(np.arange(0,9))
+    ax2.set_xticks(np.arange(0,9))
+    #ax.set_yticks(np.arange(0,1.31,0.4))
+    #ax.minorticks_on()
+    #ax.tick_params(direction='in',which='minor',length=2,right=True,top=True)
+    ax1.tick_params(direction='in',which='major',length=5,right=True,top=True)
+    ax2.tick_params(direction='in',which='major',length=5,right=True,top=True)
+
+    fig1.savefig('/media/felipe/Files/Hydrogel_sim_experiments/SelfAssemby/Results/HistMon.pdf',dpi=300,bbox_inches='tight')
+    fig2.savefig('/media/felipe/Files/Hydrogel_sim_experiments/SelfAssemby/Results/HistXl.pdf',dpi=300,bbox_inches='tight')
+
+    plt.show()
+
+def pot_ene_formation2():
+    import numpy as np
+    import matplotlib as mpl
+    import matplotlib.pyplot as plt
+    import matplotlib.gridspec as gridspec 
+
+    mpl.rcParams['pdf.fonttype'] = 42
+    mpl.rcParams['font.size'] = 14
+
+    dir = "/media/felipe/Files/Hydrogel_sim_experiments/SelfAssemby/exp2_ntb" #pc escritorio 
+
+    fig1,ax1 = plt.subplots(figsize=(5,5))
+
+    pot_ene = [row[1] for row in load_data(dir,"pot_ene_formation_2_ntb.data")]
+    frames = [row[0] for row in load_data(dir,"pot_ene_formation_2_ntb.data")]
+    time = [float(i)*0.002 for i in frames]
+
+    ax1.plot(time,pot_ene)
+
+    #Labels
+    ax1.set_ylabel('Potential Energy')
+    ax1.set_xlabel('Time')
+
+    #Ticks
+    #ax1.set_xticks(np.arange(0,9))
+    #ax.set_yticks(np.arange(0,1.31,0.4))
+    ax1.minorticks_on()
+    ax1.tick_params(direction='in',which='minor',length=2,right=True,top=True)
+    ax1.tick_params(direction='in',which='major',length=5,right=True,top=True)
+
+    fig1.savefig('/media/felipe/Files/Hydrogel_sim_experiments/SelfAssemby/Results/pot_ene.pdf',dpi=300,bbox_inches='tight')
+
+    plt.show()
+
+
+
 
 def main():
+
     #figura1()
     #figura2()
     #figura3()
@@ -1307,7 +1383,9 @@ def main():
     #ajuste8()
     #demixing_param()
     #fractal_dimension()
-    pot_ene_formation()
+    #pot_ene_formation()
+    distr_vecinos()
+    pot_ene_formation2()
 
 if __name__ == '__main__':
     main()

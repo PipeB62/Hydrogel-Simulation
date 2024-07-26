@@ -42,8 +42,8 @@ maxR = r_c-0.001
 r = np.linspace(minR,maxR,N)
 angles = np.linspace(180/(4*N),180*(1-1/(4*N)),2*N)
 
-str_3btable = f"3b_{lam}.table"
-str_3b2table = f"3b_2_{lam}.table"
+str_3btable = f"3b.table"
+str_3b2table = f"3b_2.table"
 
 # ---Tabla 1---
 data = np.zeros((N*N*(N+1),11))
@@ -60,11 +60,11 @@ for i1 in range(N):
             theta = angles[i3]
 
             data[index,1:4] = [r_ij,r_ik,theta]
-            data[index,4] = -(lam*eps*V_3_f(r_ik,sigma,r_min,r_c)*drV_3_f(r_ij,sigma,r_min,r_c))/r_ij
-            data[index,5] = -(lam*eps*V_3_f(r_ij,sigma,r_min,r_c)*drV_3_f(r_ik,sigma,r_min,r_c))/r_ik
-            data[index,6] = (lam*eps*V_3_f(r_ik,sigma,r_min,r_c)*drV_3_f(r_ij,sigma,r_min,r_c))/r_ij
+            data[index,4] = (lam*eps*V_3_f(r_ik,sigma,r_min,r_c)*drV_3_f(r_ij,sigma,r_min,r_c))/r_ij
+            data[index,5] = (lam*eps*V_3_f(r_ij,sigma,r_min,r_c)*drV_3_f(r_ik,sigma,r_min,r_c))/r_ik
+            data[index,6] = -(lam*eps*V_3_f(r_ik,sigma,r_min,r_c)*drV_3_f(r_ij,sigma,r_min,r_c))/r_ij
             data[index,7] = 0
-            data[index,8] = (lam*eps*V_3_f(r_ij,sigma,r_min,r_c)*drV_3_f(r_ik,sigma,r_min,r_c))/r_ik
+            data[index,8] = -(lam*eps*V_3_f(r_ij,sigma,r_min,r_c)*drV_3_f(r_ik,sigma,r_min,r_c))/r_ik
             data[index,9] = 0
             data[index,10] = lam*eps*V_3_f(r_ij,sigma,r_min,r_c)*V_3_f(r_ik,sigma,r_min,r_c)
             index += 1
@@ -93,11 +93,11 @@ for i1 in range(N):
             theta = angles[i3]
 
             data2[index,1:4] = [r_ij,r_ik,theta]
-            data2[index,4] = -(lam*eps*V_3_f(r_ik,sigma,r_min,r_c)*drV_3_f(r_ij,sigma,r_min,r_c))/r_ij
-            data2[index,5] = -(lam*eps*V_3_f(r_ij,sigma,r_min,r_c)*drV_3_f(r_ik,sigma,r_min,r_c))/r_ik
-            data2[index,6] = (lam*eps*V_3_f(r_ik,sigma,r_min,r_c)*drV_3_f(r_ij,sigma,r_min,r_c))/r_ij
+            data2[index,4] = (lam*eps*V_3_f(r_ik,sigma,r_min,r_c)*drV_3_f(r_ij,sigma,r_min,r_c))/r_ij
+            data2[index,5] = (lam*eps*V_3_f(r_ij,sigma,r_min,r_c)*drV_3_f(r_ik,sigma,r_min,r_c))/r_ik
+            data2[index,6] = -(lam*eps*V_3_f(r_ik,sigma,r_min,r_c)*drV_3_f(r_ij,sigma,r_min,r_c))/r_ij
             data2[index,7] = 0
-            data2[index,8] = (lam*eps*V_3_f(r_ij,sigma,r_min,r_c)*drV_3_f(r_ik,sigma,r_min,r_c))/r_ik
+            data2[index,8] = -(lam*eps*V_3_f(r_ij,sigma,r_min,r_c)*drV_3_f(r_ik,sigma,r_min,r_c))/r_ik
             data2[index,9] = 0
             data2[index,10] = lam*eps*V_3_f(r_ij,sigma,r_min,r_c)*V_3_f(r_ik,sigma,r_min,r_c)
             index += 1
@@ -115,7 +115,7 @@ file.close()
 tablepath = inputfilesdir
 
 #3b file
-file = open(f"{inputfilesdir}/threebody_{lam}.3b",'a')
+file = open(f"{inputfilesdir}/threebody.3b",'a')
 file.truncate(0) #borrar contenido actual
 for i in range(8):
     if i == 0:

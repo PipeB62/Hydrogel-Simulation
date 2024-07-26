@@ -360,6 +360,7 @@ end
 function main()
 
     systemdir = ARGS[1]
+    sigma = parse(Float64,ARGS[2])
 
     bondnum,bonds = read_system_bonds(systemdir) #Leer bonds del archivo system.data
     centers_id, centers_coords, patches_id, patches_coords = read_system_atoms(systemdir)
@@ -368,7 +369,7 @@ function main()
     patches_id_periodic, patches_coords_periodic = periodic_data(patches_id,patches_coords,L) #Obtener datos con copias periodicas de los patches
     patches_tree = KDTree(patches_coords_periodic) #Crear KDTree de patches con condiciones de frontera periodicas
 
-    r_c = 0.5
+    r_c = 1.5*sigma
 
     neighbor_distr_mon = Vector{Int64}()
     neighbor_distr_xl = Vector{Int64}()
@@ -404,7 +405,11 @@ function main()
     end
     println("Distribucion de vecinos de monomeros: ",histogram_mon)
     println("Distribucion de vecinos de cross-linkers: ",histogram_xl)
-    println("Aglomerated particles: ",aglom_id[1:10])
+    if aglomerations>10
+        println("Aglomerated particles: ",aglom_id[1:10])
+    elseif aglomerations>0
+        println("Aglomerated particles: ",aglom_id[1:end])
+    end
 
 end
 

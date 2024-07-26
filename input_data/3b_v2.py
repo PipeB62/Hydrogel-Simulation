@@ -41,8 +41,8 @@ def main():
     r = np.linspace(minR,maxR,N)
     angles = np.linspace(180/(4*N),180*(1-1/(4*N)),2*N)
 
-    str_3btable = f"3b_{lam}.table"
-    str_3b2table = f"3b_2_{lam}.table"
+    str_3btable = f"3b.table"
+    str_3b2table = f"3b_2.table"
 
     # ---Tabla 1---
     data = np.zeros((N*N*(N+1),11))
@@ -62,11 +62,11 @@ def main():
                 dVtb_drik = (V_tb_f(r_ij,r_ik+(h/2),sigma,r_min,r_c,lam,eps) - V_tb_f(r_ij,r_ik-(h/2),sigma,r_min,r_c,lam,eps))/h
 
                 data[index,1:4] = [r_ij,r_ik,theta]
-                data[index,4] = -(1/r_ij)*(dVtb_drij) #fi1
-                data[index,5] = -(1/r_ik)*(dVtb_drik) #fi2
-                data[index,6] = (1/r_ij)*(dVtb_drij) #fj1
+                data[index,4] = (1/r_ij)*(dVtb_drij) #fi1
+                data[index,5] = (1/r_ik)*(dVtb_drik) #fi2
+                data[index,6] = -(1/r_ij)*(dVtb_drij) #fj1
                 data[index,7] = 0  #fj2
-                data[index,8] = (1/r_ik)*(dVtb_drik) #fk1
+                data[index,8] = -(1/r_ik)*(dVtb_drik) #fk1
                 data[index,9] = 0 #fk2
                 data[index,10] = V_tb_f(r_ij,r_ik,sigma,r_min,r_c,lam,eps) #e
                 index += 1
@@ -98,11 +98,11 @@ def main():
                 dVtb_drik = (V_tb_f(r_ij,r_ik+(h/2),sigma,r_min,r_c,lam,eps) - V_tb_f(r_ij,r_ik-(h/2),sigma,r_min,r_c,lam,eps))/h
 
                 data2[index,1:4] = [r_ij,r_ik,theta]
-                data2[index,4] = -(1/r_ij)*(dVtb_drij) #fi1
-                data2[index,5] = -(1/r_ik)*(dVtb_drik) #fi2
-                data2[index,6] = (1/r_ij)*(dVtb_drij) #fj1
+                data2[index,4] = (1/r_ij)*(dVtb_drij) #fi1
+                data2[index,5] = (1/r_ik)*(dVtb_drik) #fi2
+                data2[index,6] = -(1/r_ij)*(dVtb_drij) #fj1
                 data2[index,7] = 0  #fj2
-                data2[index,8] = (1/r_ik)*(dVtb_drik) #fk1
+                data2[index,8] = -(1/r_ik)*(dVtb_drik) #fk1
                 data2[index,9] = 0 #fk2
                 data2[index,10] = V_tb_f(r_ij,r_ik,sigma,r_min,r_c,lam,eps) #e
                 index += 1
@@ -119,7 +119,7 @@ def main():
     tablepath = inputfilesdir
 
     #3b file
-    file = open(f"{inputfilesdir}/threebody_{lam}.3b",'a')
+    file = open(f"{inputfilesdir}/threebody.3b",'a')
     file.truncate(0) #borrar contenido actual
     for i in range(8):
         if i == 0:
