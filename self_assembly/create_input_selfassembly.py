@@ -34,7 +34,7 @@ itern_num_2 = 100_000
 iter_num_3 = 1_000_000
 
 #Definir unidades, condiciones de frontera, tipos de atomos. Newton on necesario para potencial de tres cuerpos. No guardar log en archivo
-inicializacion = ("log none \n\n" 
+inicializacion = (f"log log_{last_name}.lammps \n\n" 
                   "units lj \n" 
                   "boundary p p p \n" 
                   "atom_style full \n" 
@@ -106,7 +106,7 @@ fix_nve = (f"timestep {timestep} \n"
 
 #Percolation_fun de python
 percolation_check = ("variable check_percolation python percolation \n"
-                     f'python percolation input 2 "{directory}" {sigma} return v_check_percolation format sff file {dir_path}/percolation_fun.py \n\n')
+                     f'python percolation input 2 "{directory}" {sigma} return v_check_percolation format sff file {dir_path}/percolation_fun2.py \n\n')
 
 #fase 1: subir temperatura
 fase1 = (f"fix thermostat all langevin 0.0 {temp} {damp} {seeds[4]} \n" 
