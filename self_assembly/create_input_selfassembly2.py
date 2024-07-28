@@ -111,7 +111,7 @@ fase1 = (f"fix thermostat all langevin 0.0 {temp} {damp} {seeds[4]} \n"
 
 #fase 2: formacion
 fase2 = (f"fix thermostat all langevin {temp} {temp} {damp} {seeds[5]} \n"
-         f"run {itern_num_2} start 0 \n")
+         f"run {itern_num_2} start 0 \n\n")
 
 #fase 3: bajar temperatura
 fase3 = (f"fix thermostat all langevin {temp} 0.0 {damp_cd} {seeds[6]} \n"
