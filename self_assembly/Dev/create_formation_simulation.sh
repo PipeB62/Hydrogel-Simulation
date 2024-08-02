@@ -12,7 +12,7 @@ directorio=$7
 apellido=$8
 
 mkdir "$directorio/input_data"
-python3 create_input_selfassembly2.py $L $xl_num $mon_num $lam $sigma $l $directorio $apellido
+python3 create_input_selfassembly_v2.py $L $xl_num $mon_num $lam $sigma $l $directorio $apellido
 cd ../input_data
 python3 patchy_particles.py $l $directorio
 python3 patches.py $sigma $directorio

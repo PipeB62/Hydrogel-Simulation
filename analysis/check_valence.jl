@@ -369,7 +369,7 @@ function main()
     patches_id_periodic, patches_coords_periodic = periodic_data(patches_id,patches_coords,L) #Obtener datos con copias periodicas de los patches
     patches_tree = KDTree(patches_coords_periodic) #Crear KDTree de patches con condiciones de frontera periodicas
 
-    r_c = 1.5*sigma
+    r_c = 1.3*sigma
 
     neighbor_distr_mon = Vector{Int64}()
     neighbor_distr_xl = Vector{Int64}()
@@ -384,7 +384,6 @@ function main()
                 push!(aglom_id,centers_id[i][1])
             end
         elseif centers_id[i][2] == 3 
-            
             push!(neighbor_distr_xl,neighnum)
             if neighnum>4
                 aglomerations += 1

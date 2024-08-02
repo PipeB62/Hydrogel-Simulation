@@ -1303,8 +1303,8 @@ def distr_vecinos():
     mpl.rcParams['pdf.fonttype'] = 42
     mpl.rcParams['font.size'] = 14
 
-    mon = [80, 2219, 12578, 3, 0, 0, 0, 0, 0, 0]
-    xl = [0, 9, 95, 489, 525, 2, 0, 0, 0, 0]
+    mon = [1, 462, 14417, 0, 0, 0, 0, 0, 0, 0]
+    xl = [0, 6, 102, 434, 578, 0, 0, 0, 0, 0]
     x = [0,1,2,3,4,5,6,7,8,9]
 
     fig1,ax1 = plt.subplots(figsize=(5,5))
@@ -1342,12 +1342,12 @@ def pot_ene_formation2():
     mpl.rcParams['pdf.fonttype'] = 42
     mpl.rcParams['font.size'] = 14
 
-    dir = "/media/felipe/Files/Hydrogel_sim_experiments/SelfAssemby/exp2_ntb" #pc escritorio 
+    dir = "/media/felipe/Files/Hydrogel_sim_experiments/SelfAssemby/exp1_mp" #pc escritorio 
 
     fig1,ax1 = plt.subplots(figsize=(5,5))
 
-    pot_ene = [row[1] for row in load_data(dir,"pot_ene_formation_2_ntb.data")]
-    frames = [row[0] for row in load_data(dir,"pot_ene_formation_2_ntb.data")]
+    pot_ene = [row[1] for row in load_data(dir,"pot_ene_formation_1mp.data")]
+    frames = [row[0] for row in load_data(dir,"pot_ene_formation_1mp.data")]
     time = [float(i)*0.002 for i in frames]
 
     ax1.plot(time,pot_ene)
@@ -1363,7 +1363,7 @@ def pot_ene_formation2():
     ax1.tick_params(direction='in',which='minor',length=2,right=True,top=True)
     ax1.tick_params(direction='in',which='major',length=5,right=True,top=True)
 
-    fig1.savefig('/media/felipe/Files/Hydrogel_sim_experiments/SelfAssemby/Results/pot_ene.pdf',dpi=300,bbox_inches='tight')
+    #fig1.savefig('/media/felipe/Files/Hydrogel_sim_experiments/SelfAssemby/Results/pot_ene.pdf',dpi=300,bbox_inches='tight')
 
     plt.show()
 
@@ -1385,7 +1385,7 @@ def main():
     #fractal_dimension()
     #pot_ene_formation()
     distr_vecinos()
-    pot_ene_formation2()
+    #pot_ene_formation2()
 
 if __name__ == '__main__':
     main()

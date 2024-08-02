@@ -9,7 +9,9 @@ dir_path_split[-1]="input_data"
 inputfilesdir = "/".join(dir_path_split)
 
 #Pedir al usuario parametros de simulacion
-L,shear_rate,temp_ramp,directory,last_name = sys.argv[1:]
+L,shear_rate,directory,last_name = sys.argv[1:]
+L = float(L)
+shear_rate = float(shear_rate)
 
 #Generar semillas
 seeds = []
@@ -19,27 +21,19 @@ for i in range(10):
 #Parametros fijos
 save_every = 10000
 timestep = 0.001
+damp = 0.1 
+temp = 0.05 #Temperatura objetivo
 
-max_strain = 2
+max_strain = 10
 delta_gamma = 0.01
 
-'''with open(f"read_data {directory}/system_formation_{last_name}.data", "r") as search:
-    for num, line in enumerate(search, 1):
-        if 'zlo zhi' in line:
-            zlo = int(line.split()[2])
-            zhi = int(line.split()[3])
-l = zhi-zlo '''
-l = 2*L
-
-flip_strain = 0.5*l
-delta_gamma_distance = delta_gamma*l
+flip_strain = 0.5*L
+delta_gamma_distance = delta_gamma*L
 n = int(max_strain/delta_gamma)
 relaxation_time = delta_gamma/shear_rate
 shear_every = int(relaxation_time/timestep)
 shear_iter_num = n*shear_every 
 n_pres_av = int(shear_every/2)
-
-ramp_steps = 300000
 
 #Definir unidades, condiciones de frontera, tipos de atomos. Newton on necesario para potencial de tres cuerpos. No guardar log en archivo
 inicializacion = ("log none \n\n" 
@@ -84,15 +78,8 @@ visualization = (f"dump mydmp all atom {shear_every} {directory}/dump_shearing_{
 fix_nve = (f"timestep {timestep} \n"
            "fix mynve all nve \n\n")
 
-#Definir termostato de langevin. Si hay ramp se aumenta la temperatura y luego se define el termostato para el shear
-if temp_ramp == "y":
-    T = input("Temperature: ")
-    pre_shear = (f"thermo {save_every} \n" 
-                 f"fix thermostat all langevin 0.0 {T} 1 {seeds[0]} \n"
-                 f"run {ramp_steps} \n\n"
-                 f"fix thermostat all langevin {T} {T} 1 {seeds[1]} \n\n")
-elif temp_ramp == "n":
-    pre_shear = (f"fix thermostat all langevin 0.0 0.0 1 {seeds[2]} \n\n")
+#Definir termostato de langevin. 
+langevin = (f"fix thermostat all langevin {temp} {temp} {damp} {seeds[2]} \n\n")
 
 shear = (f"variable n_loop loop {n} \n"
          "variable xy equal xy \n" 
@@ -106,7 +93,7 @@ shear = (f"variable n_loop loop {n} \n"
 
 write_data = f"write_data {directory}/system_shearing_{last_name}.data"
 
-input_file = [inicializacion,bonds_angles,read_system,pair_definitions,fix_nve,pre_shear,pressure,visualization,
+input_file = [inicializacion,bonds_angles,read_system,pair_definitions,pressure,visualization,fix_nve,langevin,
               shear,write_data]
 with open(f"{directory}/input_shearing_{last_name}.lammps","a") as f:  
     f.truncate(0)

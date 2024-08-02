@@ -1,17 +1,17 @@
-def percolation(directory,sigma):
+def percolation(data_directory,sigma):
     from ovito.io import import_file
     from ovito.modifiers import ClusterAnalysisModifier, CreateBondsModifier, ReplicateModifier
     import numpy as np
 
 
-    input_filepath=f"{directory}/system_check.data"
+    input_filepath=data_directory
 
     node = import_file(input_filepath)
 
     node.modifiers.append(ReplicateModifier(adjust_box = True, num_x = 3, num_y = 3, num_z = 3))
 
     #Modificador para crear bonds patch-patch
-    a = 1.5
+    a = 1.3
     Rlim = sigma*a #Cutoff para crear bonds patch-patch
     create_bonds1 = CreateBondsModifier(mode=CreateBondsModifier.Mode.Pairwise) 
     create_bonds1.set_pairwise_cutoff(2,2,Rlim)
@@ -32,9 +32,21 @@ def percolation(directory,sigma):
     percentage = biggest_cluster_sz/n_particles
     
     return percentage
-    
-#print(percolation("/media/felipe/Files/Hydrogel_sim_experiments/SelfAssemby/exp0",0.25))
 
+def main():
+    import sys
+
+    directory, sigma = sys.argv[1:]
+    percentage = percolation(directory,float(sigma))
+    print(percentage)
+    if percentage>0.9:
+        print('y')
+    else:
+        print('n')
+
+if __name__=="__main__":
+    main()
+    
 
 
 

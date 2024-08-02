@@ -106,7 +106,7 @@ fix_nve = (f"timestep {timestep} \n"
 
 #Percolation_fun de python
 percolation_check = ("variable check_percolation python percolation \n"
-                     f'python percolation input 2 "{directory}" {sigma} return v_check_percolation format sff file {dir_path}/percolation_fun2.py \n\n')
+                     f'python percolation input 2 "{directory}/system_check.data" {sigma} return v_check_percolation format sff file {dir_path}/percolation_fun2.py \n\n')
 
 #fase 1: subir temperatura
 fase1 = (f"fix thermostat all langevin 0.0 {temp} {damp} {seeds[4]} \n" 

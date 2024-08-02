@@ -1,15 +1,6 @@
 from random import randint
 import os 
 import sys
-'''
-#Obtener direccion de carpeta input_data
-dir_path = os.path.dirname(os.path.realpath(__file__))
-dir_path_split = dir_path.split("/")
-dir_path_split[-1]="input_data"
-inputfilesdir = "/".join(dir_path_split)
-'''
-
-dir_path = os.path.dirname(os.path.realpath(__file__))
 
 #Dar como input L (longitud de caja), numero de xl, numero de monomeros, lambda (tres cuerpos), sigma (3b),directorio, l (longitud centro-patch), , y apellido del archivo
 
@@ -26,12 +17,10 @@ for i in range(10):
 #Parametros fijos
 save_every = 10000
 timestep = 0.002
-temp = 0.05
-damp = 0.1
-damp_cd = 1.0
+temp = 0.05 #Temperatura objetivo
+damp = 0.1 
 iter_num_1 = 500_000 #1000 unidades de tiempo 
-itern_num_2 = 3_500_000 #7000 unidades de tiempo 
-iter_num_3 = 1_000_000 #2000 unidades de tiempo reducido
+itern_num_2 = 4_500_000 #9000 unidades de tiempo 
 
 #Definir unidades, condiciones de frontera, tipos de atomos. Newton on necesario para potencial de tres cuerpos. No guardar log en archivo
 inicializacion = (f"log log_{last_name}.lammps \n\n" 
@@ -104,7 +93,6 @@ fix_save_energy = (f"fix save_pot_ene all ave/time 1 1 {save_every} c_pot_ene fi
 fix_nve = (f"timestep {timestep} \n"
            "fix mynve all nve \n\n" )
 
-
 #fase 1: subir temperatura
 fase1 = (f"fix thermostat all langevin 0.0 {temp} {damp} {seeds[4]} \n" 
          f"run {iter_num_1} start 0 \n\n")
@@ -113,9 +101,6 @@ fase1 = (f"fix thermostat all langevin 0.0 {temp} {damp} {seeds[4]} \n"
 fase2 = (f"fix thermostat all langevin {temp} {temp} {damp} {seeds[5]} \n"
          f"run {itern_num_2} start 0 \n\n")
 
-#fase 3: bajar temperatura
-fase3 = (f"fix thermostat all langevin {temp} 0.0 {damp_cd} {seeds[6]} \n"
-         f"run {iter_num_3} start 0 \n\n")
 
 #Guardar sistema final
 write_data = f"write_data {directory}/system_formation_{last_name}.data"
@@ -123,7 +108,7 @@ write_data = f"write_data {directory}/system_formation_{last_name}.data"
 
 #Crear y escribir. Reescribir si el archivo ya existe
 input_file = [inicializacion,sim_box,atom_types,pair_definitions,bonds_angles,spawn,computes,visualization,
-              minimize_energy,fix_save_energy,fix_nve,fase1,fase2,fase3,write_data]
+              minimize_energy,fix_save_energy,fix_nve,fase1,fase2,write_data]
 with open(f"{directory}/input_formation_{last_name}.lammps","a") as f:  
     f.truncate(0)
     f.writelines(input_file)
