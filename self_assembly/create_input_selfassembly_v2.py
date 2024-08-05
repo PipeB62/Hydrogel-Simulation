@@ -23,7 +23,7 @@ iter_num_1 = 500_000 #1000 unidades de tiempo
 itern_num_2 = 4_500_000 #9000 unidades de tiempo 
 
 #Definir unidades, condiciones de frontera, tipos de atomos. Newton on necesario para potencial de tres cuerpos. No guardar log en archivo
-inicializacion = (f"log log_{last_name}.lammps \n\n" 
+inicializacion = (f"log log_formation_{last_name}.lammps \n\n" 
                   "units lj \n" 
                   "boundary p p p \n" 
                   "atom_style full \n" 
