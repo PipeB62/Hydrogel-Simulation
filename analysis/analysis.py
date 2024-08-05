@@ -5,18 +5,30 @@ non_affine_sq_disp() calcula el non affine squared displacement del sistema con 
 
 El main() da la opcion de especificar los directorios de dumps arbitrarios para realizar este analisis y hacer graficas. 
 '''
+
+def write_json(savedir,name,data):
+    import json 
+    with open (f'{savedir}/{name}.json','w') as f:
+        json.dump(data,f)
+
+def load_data(dir,name):
+    import numpy as np
+    a = np.loadtxt(f"{dir}/{name}")
+    return a.tolist()
+
+
 def count_bonds_and_clusters(dumpdir):
     from ovito.io import import_file
     from ovito.modifiers import ClusterAnalysisModifier, CreateBondsModifier
     import numpy as np
     import json
 
+    print("Inicio bonds y clusters")
+
     node = import_file(dumpdir)
 
     #Obtener numero de iteraciones
     iter_num = node.source.num_frames
-
-    x = np.arange(iter_num-1)
 
     #Modificador para crear bonds patch-patch
     Rlim = 0.5 #Cutoff para crear bonds patch-patch
@@ -31,10 +43,9 @@ def count_bonds_and_clusters(dumpdir):
         data=node.compute(i)
         bonds_v_t.append(data.particles.bonds.count) 
     
-
     #Modificador para crear bonds centro-patch
     #Rlim2 = 0.37 #para cuerpos rigidos
-    Rlim2 = 0.5 #para bonds
+    Rlim2 = 0.52 #para bonds
     create_bonds2 = CreateBondsModifier(mode=CreateBondsModifier.Mode.Pairwise) 
     create_bonds2.set_pairwise_cutoff(1,2,Rlim2)
     create_bonds2.set_pairwise_cutoff(3,4,Rlim2)
@@ -58,15 +69,9 @@ def count_bonds_and_clusters(dumpdir):
     savedir = '/'.join(dir)
 
     print('Esribiendo resultados en archivos json')
-    with open (f'{savedir}/analysis_bonds_v_t.json','w') as f:
-        json.dump(bonds_v_t,f)
-    with open (f'{savedir}/analysis_clusternum_v_t.json','w') as f:
-        json.dump(clusternum_v_t,f)
-    with open (f'{savedir}/analysis_bigclustersz_v_t.json','w') as f:
-        json.dump(bigclustersz_v_t,f)
-    x = x.tolist()
-    with open (f'{savedir}/analysis_x1.json','w') as f:
-        json.dump(x,f)
+    write_json(savedir,"analysis_bonds_v_t",bonds_v_t)
+    write_json(savedir,"analysis_clusternum_v_t",clusternum_v_t)
+    write_json(savedir,"analysis_bigclustersz_v_t",bigclustersz_v_t)
     print('FIN')
 
     #return bonds_v_t,clusternum_v_t,bigclustersz_v_t,x
@@ -78,12 +83,12 @@ def non_affine_sq_disp(dumpdir):
     import numpy as np
     import json
 
+    print("Inicio non-affine sq displacement")
+
     node = import_file(dumpdir)
 
     #Obtener numero de iteraciones
     iter_num = node.source.num_frames
-
-    x = np.arange(iter_num-1)
 
     #Seleccionar patches
     selectpatches = SelectTypeModifier(operate_on = "particles",
@@ -118,17 +123,15 @@ def non_affine_sq_disp(dumpdir):
     savedir = '/'.join(dir)
 
     print('Esribiendo resultados en archivos json')
-    with open (f'{savedir}/analysis_Dsq_v_t.json','w') as f:
-        json.dump(Dsq_v_t,f)
-    x = x.tolist()
-    with open (f'{savedir}/analysis_x2.json','w') as f:
-        json.dump(x,f)
+    write_json(savedir,"analysis_Dsq_v_t",Dsq_v_t)
     print('FIN')
 
     #return Dsq_v_t,x
 
 def strain(dumpdir):
     import json
+
+    print("Inicio strain")
 
     #obtener numero de frames
     frame_num = 0
@@ -139,6 +142,7 @@ def strain(dumpdir):
     
     dump = open(dumpdir,"r")
     strain = []
+    jumps=0
     for frame in range(frame_num):
         for i in range(3):
             dump.readline()
@@ -151,26 +155,50 @@ def strain(dumpdir):
         for i in range(atom_num):
             dump.readline()
         L = zmax-zmin
-        strain.append(xy/L)
+        s = xy/L+jumps   
+        if len(strain)>0:
+            sa = strain[-1]
+        else:
+            sa = 0    
+        if s-sa<0:
+            jumps+=1
+            s=s+1
+        strain.append(s)
+    dump.close()
 
     dir = dumpdir.split('/')
     dir[-1] = "analysis_results"
     savedir = '/'.join(dir)
 
     print('Esribiendo resultados en archivos json')
-    with open (f'{savedir}/analysis_strain.json','w') as f:
-        json.dump(strain,f)
+    write_json(savedir,"analysis_strain",strain)
+    print("FIN")
+
+def stress(dir,pres):
+
+    print("Inicio stress")
+
+    stress = [-row[4] for row in load_data(dir,pres)]
+
+    print("Escribiendo resultados en archivos json")
+    write_json(f"{dir}/analysis_results","analysis_stress",stress)
+    print("FIN")
 
 
 def main():
     import sys
 
-    dumpdir = sys.argv[1]
+    dir = sys.argv[1]
+    dump = sys.argv[2]
+    pres = sys.argv[3]
+
+    dumpdir = "/".join([dir,dump])
 
     print('Iniciando analisis')
-    count_bonds_and_clusters(dumpdir)
-    non_affine_sq_disp(dumpdir)
+    #count_bonds_and_clusters(dumpdir)
+    #non_affine_sq_disp(dumpdir)
     strain(dumpdir)
+    #stress(dir,pres)
     print('FIN')
 
 if __name__=="__main__":

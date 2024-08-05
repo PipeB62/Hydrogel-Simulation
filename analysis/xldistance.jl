@@ -341,17 +341,30 @@ function real_distance(c_id1::Int64,
 
 end
 
+#Guarda los datos en un archivo json
+function write_json(savedir,data,name)
+    json_string = JSON.json(data)
+    open("$(savedir)/$(name).json","w") do f
+        JSON.print(f, json_string)
+    end
+end
+
 function main()
 
-    dumpdir = ARGS[1]
-    systemdir = ARGS[2]
+    dir = ARGS[1]
+    dumpp = ARGS[2]
+    system = ARGS[3]
+
+    dumpdir = dir * "/" * dumpp
+    systemdir = dir * "/" * system
+
 
     frame_num = read_frame_num(dumpdir)
 
     calc_frames_num = 50
     calc_frames_step = floor(frame_num/calc_frames_num)
     calc_frames = 1:calc_frames_step:frame_num
-    calc_frames = [1]
+    #calc_frames = [1]
 
     bondnum,bonds = read_system_bonds(systemdir) #Leer bonds del archivo system.data
 
@@ -373,13 +386,12 @@ function main()
             #centers_id_periodic, centers_coords_periodic = periodic_data(patches_id,patches_coords,L) #Obtener datos con copias periodicas de los centros
 
             xl_list = get_xl_list(centers_id)
-            println("Xl num: ",length(xl_list))
             r_c = 0.55 #Radio cutoff para determinar vecinos patch-patch
 
             xl_coordinations = Vector{Int64}()
             av_distances = Vector{Float64}()
             for c_xl in xl_list
-                print(c_xl, " ")
+                #print(c_xl, " ")
                 queue = Vector{Int64}() #Cola
                 visited = Vector{Int64}() #Nodos visitados
                 push!(queue,c_xl)
@@ -409,16 +421,16 @@ function main()
                     end
                 end
 
-                av_distance = 0
-                for l_xl in linked_xls
-                    av_distance += real_distance(c_xl,l_xl,centers_coords,centers_id,L)
+                if length(linked_xls)>0
+                    av_distance = 0
+                    for l_xl in linked_xls
+                        av_distance += real_distance(c_xl,l_xl,centers_coords,centers_id,L)
+                    end
+                    av_distance = av_distance/length(linked_xls)
+                    push!(xl_coordinations,length(linked_xls))
+                    push!(av_distances,av_distance)
                 end
-                av_distance = av_distance/length(linked_xls)
-
-                push!(xl_coordinations,length(linked_xls))
-                push!(av_distances,av_distance)
             end
-            println()
             println("Mean coordination: ",mean(xl_coordinations))
             push!(mean_coordination,mean(xl_coordinations))
             println("Mean distance: ",mean(av_distances))
@@ -431,8 +443,13 @@ function main()
     end
     close(dump)
 
-    println("Coordination: ",mean_coordination)
-    println("Distances: ",mean_distance)
+    savedir = dir * "/" * "analysis_results"
+    #println("Coordination: ",mean_coordination)
+    write_json(savedir,mean_coordination,"mean_xl_coord_v_t")
+    #println("Distances: ",mean_distance)
+    write_json(savedir,mean_distance,"mean_xl_distance_v_t")
+
+    write_json(savedir,calc_frames,"xldistance_calcframes")
 
 end
 
