@@ -54,6 +54,25 @@ def average_hist(data):
         ave_data.append(h)
     return ave_data
 
+def average_general():
+    import sys 
+
+    expdir = sys.argv[1]
+    savedir = sys.argv[2]
+    dataname = sys.argv[3]
+    expnum = int(sys.argv[4])
+
+    data = []
+
+    for exp in range(1,expnum+1):
+        dir = f"{expdir}/exp{exp}/analysis_results"
+        data.append(load_json(dir,dataname))
+
+    data_ave, data_std = average(data)
+
+    write_json(savedir,f"{dataname}_ave",data_ave)
+    write_json(savedir,f"{dataname}_std",data_std)
+    
 def average_basic_analysis():
     import sys 
 
@@ -249,10 +268,7 @@ def average_fractal_dimension():
 
 
 def main():
-    average_basic_analysis()
-    average_hole_analysis()
-    average_demixing_param()
-    average_fractal_dimension()
+    average_general()
 
 if __name__ == "__main__":
     main()

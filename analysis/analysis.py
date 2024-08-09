@@ -184,6 +184,16 @@ def stress(dir,pres):
     write_json(f"{dir}/analysis_results","analysis_stress",stress)
     print("FIN")
 
+def pot_ene_formation(dir,pot_ene):
+    print("Inicio pot_ene_formation")
+
+    pe = [row[1] for row in load_data(dir,pot_ene)]
+    frames = [row[0] for row in load_data(dir,pot_ene)]
+
+    print("Escribiendo resultados en archivos json")
+    write_json(f"{dir}/analysis_results","pot_ene_formation",pe)
+    write_json(f"{dir}/analysis_results","pot_ene_formation_frames",frames)
+    print("FIN")
 
 def main():
     import sys
@@ -191,14 +201,16 @@ def main():
     dir = sys.argv[1]
     dump = sys.argv[2]
     pres = sys.argv[3]
+    pot_ene = sys.argv[4]
 
     dumpdir = "/".join([dir,dump])
 
     print('Iniciando analisis')
-    #count_bonds_and_clusters(dumpdir)
-    #non_affine_sq_disp(dumpdir)
+    count_bonds_and_clusters(dumpdir)
+    non_affine_sq_disp(dumpdir)
     strain(dumpdir)
-    #stress(dir,pres)
+    stress(dir,pres)
+    pot_ene_formation(dir,pot_ene)
     print('FIN')
 
 if __name__=="__main__":

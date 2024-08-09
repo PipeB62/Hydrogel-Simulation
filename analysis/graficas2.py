@@ -19,12 +19,12 @@ def derivative(data,step):
 
 def derivative2(data,step):
     a = []
-    for i in range(1,len(data)):
+    for i in range(1,len(data)-1):
         a.append((data[i+1]-data[i-1])/(2*step))
     return a
 
 #Grafica stress-strain con los datos de analisis comparados verticalmente
-def figura1():
+def stress_strain_basic_analysis():
     import numpy as np
     import matplotlib as mpl
     import matplotlib.pyplot as plt
@@ -34,16 +34,15 @@ def figura1():
     mpl.rcParams['font.size'] = 14
 
     #Directorios con datos
-    dir = "/media/felipe/Files/Hydrogel_sim_experiments/SizeExperiments/16k_particles/averaged_data" #pc escritorio 
+    dir = "/media/felipe/KINGSTON/Hydrogel_sim_experiments/Test1/averaged_data" #pc escritorio 
     #dir = "D:/ExperimentData/SizeExperiment/16k_particles/averaged_data" #laptop
 
     #importar datos de estres y strain promediados
-    stress_v_t_ave = [-i for i in load_json(dir,"stress_v_t_ave")]
-    strain = load_json(dir,"strain")
-    for i,x in enumerate(strain):
-        if x < 0:
-            strain[i] = x+1
+    stress_v_t_ave = load_json(dir,"analysis_stress_ave")
+    stress_v_t_std = load_json(dir,"analysis_stress_std")
+    strain = load_json(dir,"analysis_strain_ave")
     strain.pop(0) #Quitar el frame 0 del strain
+
     #Obtener el yield strain. Lugar de maximo estres
     yield_ix = stress_v_t_ave.index(max(stress_v_t_ave))
     yield_strain = strain[yield_ix]
@@ -52,9 +51,10 @@ def figura1():
     dsigma_dgamma = derivative2(stress_v_t_ave,0.01)
     maxderix = dsigma_dgamma.index(max(dsigma_dgamma))
     max_der_strain = strain[maxderix+1]
+    max_der_strain = 0.5
 
     #Crear figura
-    fig = plt.figure(1,figsize=(5,8))
+    fig = plt.figure(1,figsize=(8,8))
 
     #Gridspec para subplots
     gs = gridspec.GridSpec(5,4)
@@ -62,7 +62,8 @@ def figura1():
 
     #Crear subplot1 y graficar
     subplot1 = fig.add_subplot(gs[0,0:4])
-    plt.plot(strain[:100],stress_v_t_ave[:100],marker='s',markersize=2,mfc='w',linestyle='-')
+    plt.plot(strain[:],stress_v_t_ave[:])
+    plt.errorbar(strain[0::30],stress_v_t_ave[0::30],yerr=stress_v_t_std[0::30],marker='s',markersize=2,mfc='w',linestyle='None',capsize=2)
     plt.axvline(x=yield_strain,linestyle='--',c='black')
     plt.axvline(x=max_der_strain,linestyle='--',c='red')
 
@@ -70,21 +71,21 @@ def figura1():
     plt.ylabel('$\sigma_{xy}$')
 
     #Limites
-    plt.xlim((0,1))
-    plt.ylim((-0.01,0.1))
+    plt.xlim((0,10))
+    #plt.ylim((-0.01,0.1))
 
     #Ticks
-    plt.xticks(np.arange(0,1.1,0.2))
-    plt.yticks(np.arange(0,0.11,0.03))
+    #plt.xticks(np.arange(0,1.1,0.2))
+    #plt.yticks(np.arange(0,0.11,0.03))
     #plt.tick_params(direction='in',length=5,right=True,top=True)
     plt.minorticks_on()
     plt.tick_params(direction='in',which='minor',length=2,right=True,top=True)
     plt.tick_params(direction='in',which='major',length=5,right=True,top=True)
     plt.tick_params(labelbottom=False)
 
-    #crear subplot 5 y graficar 
-    subplot5 = fig.add_subplot(gs[1,0:4])
-    plt.plot(strain[1:100],dsigma_dgamma[0:99],marker='s',markersize=2,mfc='w',linestyle='-')
+    #crear subplot 2 y graficar 
+    subplot2 = fig.add_subplot(gs[1,0:4])
+    plt.plot(strain[1:-1],dsigma_dgamma[:],marker='s',markersize=2,mfc='w',linestyle='-')
     plt.axvline(x=yield_strain,linestyle='--',c='black')
     plt.axvline(x=max_der_strain,linestyle='--',c='red')
 
@@ -92,10 +93,10 @@ def figura1():
     plt.ylabel(r"$\frac{d \sigma_{xy}}{d \gamma}$")
 
     #Limites
-    plt.xlim((0,1))
+    plt.xlim((0,10))
 
     #Ticks
-    plt.xticks(np.arange(0,1.1,0.2))
+    #plt.xticks(np.arange(0,1.1,0.2))
     #plt.tick_params(direction='in',length=5,right=True,top=True)
     plt.minorticks_on()
     plt.tick_params(direction='in',which='minor',length=2,right=True,top=True)
@@ -103,12 +104,13 @@ def figura1():
     plt.tick_params(labelbottom=False)
 
     #importar datos de numero de bonds
-    bonds_v_t_ave = load_json(dir,"bonds_v_t_ave")
-    bonds_v_t_ave.pop(0)
+    bonds_v_t_ave = load_json(dir,"analysis_bonds_v_t_ave")
+    bonds_v_t_std = load_json(dir,"analysis_bonds_v_t_std")
 
-    #crear subplot 2 y graficar
-    subplot2 = fig.add_subplot(gs[2,0:4])
-    plt.plot(strain[:100],bonds_v_t_ave[:100],marker='s',markersize=2,mfc='w',linestyle='-')
+    #crear subplot 3 y graficar
+    subplot3 = fig.add_subplot(gs[2,0:4])
+    plt.plot(strain[:],bonds_v_t_ave[:])
+    plt.errorbar(strain[0::30],bonds_v_t_ave[0::30],yerr=bonds_v_t_std[0::30],marker='s',markersize=2,mfc='w',linestyle='None',capsize=2)
     plt.axvline(x=yield_strain,linestyle='--',c='black')
     plt.axvline(x=max_der_strain,linestyle='--',c='red')
 
@@ -116,11 +118,11 @@ def figura1():
     plt.ylabel('$N_b$')
 
     #Limites
-    plt.xlim((0,1))
-    plt.ylim((21300,21700))
+    plt.xlim((0,10))
+    #plt.ylim((21300,21700))
 
     #Ticks
-    plt.xticks(np.arange(0,1.1,0.2))
+    #plt.xticks(np.arange(0,1.1,0.2))
     #plt.tick_params(direction='in',length=5,right=True,top=True)
     plt.minorticks_on()
     plt.tick_params(direction='in',which='minor',length=2,right=True,top=True)
@@ -128,12 +130,13 @@ def figura1():
     plt.tick_params(labelbottom=False)
 
     #importar datos de numero de clusters 
-    clusternum_v_t_ave = load_json(dir,"clusternum_v_t_ave")
-    clusternum_v_t_ave.pop(0)
+    clusternum_v_t_ave = load_json(dir,"analysis_clusternum_v_t_ave")
+    clusternum_v_t_std = load_json(dir,"analysis_clusternum_v_t_std")
 
-    #crear subplot 3 y graficar
-    subplot3 = fig.add_subplot(gs[3,0:4])
-    plt.plot(strain[:100],clusternum_v_t_ave[:100],marker='s',markersize=2,mfc='w',linestyle='-')
+    #crear subplot 4 y graficar
+    subplot4 = fig.add_subplot(gs[3,0:4])
+    plt.plot(strain[:],clusternum_v_t_ave[:])
+    plt.errorbar(strain[0::30],clusternum_v_t_ave[0::30],yerr=clusternum_v_t_std[0::30],marker='s',markersize=2,mfc='w',linestyle='None',capsize=2)
     plt.axvline(x=yield_strain,linestyle='--',c='black')
     plt.axvline(x=max_der_strain,linestyle='--',c='red')
 
@@ -141,47 +144,231 @@ def figura1():
     plt.ylabel('$N_c$')
 
     #Limites
-    plt.xlim((0,1))
-    plt.ylim((-2,28))
+    plt.xlim((0,10))
+    #plt.ylim((-2,28))
 
     #Ticks
-    plt.xticks(np.arange(0,1.1,0.2))
+    #plt.xticks(np.arange(0,1.1,0.2))
     #plt.tick_params(direction='in',length=5,right=True,top=True)
     plt.minorticks_on()
     plt.tick_params(direction='in',which='minor',length=2,right=True,top=True)
     plt.tick_params(direction='in',which='major',length=5,right=True,top=True)
     plt.tick_params(labelbottom=False)
 
-    #importar datos de non affine squared displacement 
-    dsq_v_t_ave = load_json(dir,"dsq_v_t_ave")
-    dsq_v_t_ave.pop(0)
+    #importar datos de tamaño del cluster mas grande
+    bigclustersz_v_t_ave = load_json(dir,"analysis_bigclustersz_v_t_ave")
+    bigclustersz_v_t_std = load_json(dir,"analysis_bigclustersz_v_t_std")
 
     #crear subplot 4 y graficar
     subplot4 = fig.add_subplot(gs[4,0:4])
-    plt.plot(strain[:100],dsq_v_t_ave[:100],marker='s',markersize=2,mfc='w',linestyle='-')
+    plt.plot(strain[:],bigclustersz_v_t_ave[:])
+    plt.errorbar(strain[0::30],bigclustersz_v_t_ave[0::30],yerr=bigclustersz_v_t_std[0::30],marker='s',markersize=2,mfc='w',linestyle='None',capsize=2)
     plt.axvline(x=yield_strain,linestyle='--',c='black')
     plt.axvline(x=max_der_strain,linestyle='--',c='red')
 
     #Labels 
-    plt.ylabel('$D^2$')
+    plt.ylabel('Cluster Size')
     plt.xlabel(r'$\gamma$')
 
     #Limites
-    plt.xlim((0,1))
+    plt.xlim((0,10))
 
     #Ticks
-    plt.xticks(np.arange(0,1.1,0.2))
+    #plt.xticks(np.arange(0,1.1,0.2))
     #plt.tick_params(direction='in',length=5,right=True,top=True)
     plt.minorticks_on()
     plt.tick_params(direction='in',which='minor',length=2,right=True,top=True)
     plt.tick_params(direction='in',which='major',length=5,right=True,top=True)
 
-    plt.savefig('D:/ExperimentData/SizeExperiment/graficas/stress_strain_analysis.pdf',dpi=300,bbox_inches='tight')
+    #plt.savefig('D:/ExperimentData/SizeExperiment/graficas/stress_strain_analysis.pdf',dpi=300,bbox_inches='tight')
+    plt.savefig('/media/felipe/KINGSTON/Hydrogel_sim_experiments/Test1/Graficas/stress_strain_basic_analysis.pdf',dpi=300,bbox_inches='tight')
+
+    plt.show()
+
+def stress_strain_xl_distance():
+    import numpy as np
+    import matplotlib as mpl
+    import matplotlib.pyplot as plt
+    import matplotlib.gridspec as gridspec 
+
+    mpl.rcParams['pdf.fonttype'] = 42
+    mpl.rcParams['font.size'] = 14
+
+    #Directorios con datos
+    dir = "/media/felipe/KINGSTON/Hydrogel_sim_experiments/Test1/averaged_data" #pc escritorio 
+    #dir = "D:/ExperimentData/SizeExperiment/16k_particles/averaged_data" #laptop
+
+    #importar datos de estres y strain promediados
+    stress_v_t_ave = load_json(dir,"analysis_stress_ave")
+    stress_v_t_std = load_json(dir,"analysis_stress_std")
+    strain = load_json(dir,"analysis_strain_ave")
+    strain_nz = strain[1:]
+
+    calcframes = load_json(dir,"xldistance_calcframes_ave")
+    c = 0
+    strain_cf = []
+    for i,s in enumerate(strain):
+        if i == calcframes[c]-1:
+            c+=1
+            strain_cf.append(s)
+
+    #Obtener el yield strain. Lugar de maximo estres
+    yield_ix = stress_v_t_ave.index(max(stress_v_t_ave))
+    yield_strain = strain[yield_ix]
+
+    #derivada del estres con respecto al strain
+    dsigma_dgamma = derivative2(stress_v_t_ave,0.01)
+    maxderix = dsigma_dgamma.index(max(dsigma_dgamma))
+    max_der_strain = strain[maxderix+1]
+    max_der_strain = 0.5
+
+    #Crear figura
+    fig = plt.figure(1,figsize=(8,8))
+
+    #Gridspec para subplots
+    gs = gridspec.GridSpec(4,4)
+    gs.update(wspace=0.2,hspace=0)
+
+    #Crear subplot1 y graficar
+    subplot1 = fig.add_subplot(gs[0,0:4])
+    plt.plot(strain_nz[:],stress_v_t_ave[:])
+    plt.errorbar(strain_nz[0::30],stress_v_t_ave[0::30],yerr=stress_v_t_std[0::30],marker='s',markersize=2,mfc='w',linestyle='None',capsize=2)
+    plt.axvline(x=yield_strain,linestyle='--',c='black')
+    plt.axvline(x=max_der_strain,linestyle='--',c='red')
+
+    #Labels
+    plt.ylabel('$\sigma_{xy}$')
+
+    #Limites
+    plt.xlim((0,10))
+    #plt.ylim((-0.01,0.1))
+
+    #Ticks
+    #plt.xticks(np.arange(0,1.1,0.2))
+    #plt.yticks(np.arange(0,0.11,0.03))
+    #plt.tick_params(direction='in',length=5,right=True,top=True)
+    plt.minorticks_on()
+    plt.tick_params(direction='in',which='minor',length=2,right=True,top=True)
+    plt.tick_params(direction='in',which='major',length=5,right=True,top=True)
+    plt.tick_params(labelbottom=False)
+
+    #crear subplot 2 y graficar 
+    subplot2 = fig.add_subplot(gs[1,0:4])
+    plt.plot(strain_nz[1:-1],dsigma_dgamma[:],marker='s',markersize=2,mfc='w',linestyle='-')
+    plt.axvline(x=yield_strain,linestyle='--',c='black')
+    plt.axvline(x=max_der_strain,linestyle='--',c='red')
+
+    #Labels 
+    plt.ylabel(r"$\frac{d \sigma_{xy}}{d \gamma}$")
+
+    #Limites
+    plt.xlim((0,10))
+
+    #Ticks
+    #plt.xticks(np.arange(0,1.1,0.2))
+    #plt.tick_params(direction='in',length=5,right=True,top=True)
+    plt.minorticks_on()
+    plt.tick_params(direction='in',which='minor',length=2,right=True,top=True)
+    plt.tick_params(direction='in',which='major',length=5,right=True,top=True)
+    plt.tick_params(labelbottom=False)
+
+    #importar datos de xl coord
+    mean_xl_coord_v_t_ave = load_json(dir,"mean_xl_coord_v_t_ave")
+    mean_xl_coord_v_t_std = load_json(dir,"mean_xl_coord_v_t_std")
+
+    #crear subplot 3 y graficar
+    subplot3 = fig.add_subplot(gs[2,0:4])
+    plt.plot(strain_cf[:],mean_xl_coord_v_t_ave[:],linestyle="--")
+    plt.errorbar(strain_cf[:],mean_xl_coord_v_t_ave[:],yerr=mean_xl_coord_v_t_std[:],marker='s',markersize=2,mfc='w',linestyle='None',capsize=2)
+    plt.axvline(x=yield_strain,linestyle='--',c='black')
+    plt.axvline(x=max_der_strain,linestyle='--',c='red')
+
+    #Labels 
+    plt.ylabel(r'$\langle C_{xl} \rangle$')
+
+    #Limites
+    plt.xlim((0,10))
+    #plt.ylim((21300,21700))
+
+    #Ticks
+    #plt.xticks(np.arange(0,1.1,0.2))
+    #plt.tick_params(direction='in',length=5,right=True,top=True)
+    plt.minorticks_on()
+    plt.tick_params(direction='in',which='minor',length=2,right=True,top=True)
+    plt.tick_params(direction='in',which='major',length=5,right=True,top=True)
+    plt.tick_params(labelbottom=False)
+
+    #importar datos de xl distance
+    mean_xl_distance_v_t_ave = load_json(dir,"mean_xl_distance_v_t_ave")
+    mean_xl_distance_v_t_std = load_json(dir,"mean_xl_distance_v_t_std")
+
+    #crear subplot 4 y graficar
+    subplot4 = fig.add_subplot(gs[3,0:4])
+    plt.plot(strain_cf[:],mean_xl_distance_v_t_ave[:],linestyle="--")
+    plt.errorbar(strain_cf[:],mean_xl_distance_v_t_ave[:],yerr=mean_xl_distance_v_t_std[:],marker='s',markersize=2,mfc='w',linestyle='None',capsize=2)
+    plt.axvline(x=yield_strain,linestyle='--',c='black')
+    plt.axvline(x=max_der_strain,linestyle='--',c='red')
+
+    #Labels 
+    plt.ylabel(r'$\langle D_{xl} \rangle$')
+    plt.xlabel(r'$\gamma$')
+    #Limites
+    plt.xlim((0,10))
+    #plt.ylim((-2,28))
+
+    #Ticks
+    #plt.xticks(np.arange(0,1.1,0.2))
+    #plt.tick_params(direction='in',length=5,right=True,top=True)
+    plt.minorticks_on()
+    plt.tick_params(direction='in',which='minor',length=2,right=True,top=True)
+    plt.tick_params(direction='in',which='major',length=5,right=True,top=True)
+    plt.tick_params(labelbottom=False)
+
+    #plt.savefig('D:/ExperimentData/SizeExperiment/graficas/stress_strain_xldistance.pdf',dpi=300,bbox_inches='tight')
+    plt.savefig('/media/felipe/KINGSTON/Hydrogel_sim_experiments/Test1/Graficas/stress_strain_xldistance.pdf',dpi=300,bbox_inches='tight')
     
     plt.show()
 
+def stress_strain_loglog():
+    import numpy as np
+    import matplotlib as mpl
+    import matplotlib.pyplot as plt
+    import matplotlib.gridspec as gridspec 
+
+    mpl.rcParams['pdf.fonttype'] = 42
+    mpl.rcParams['font.size'] = 14
+
+    #Directorios con datos
+    #dir = "/media/felipe/Files/Hydrogel_sim_experiments/SizeExperiments/16k_particles/averaged_data" #pc escritorio
+    #dir = "D:/ExperimentData/SizeExperiment/16k_particles/averaged_data" #laptop
+    dir = "/media/felipe/KINGSTON/Hydrogel_sim_experiments/Test1/averaged_data" #usb
+
+    stress = load_json(dir,"analysis_stress_ave")
+    stress_std = load_json(dir,"analysis_stress_std")
+    strain = load_json(dir,"analysis_strain_ave")
+    strain.pop(0)
+    
+    fig,ax = plt.subplots(figsize=(5,5))
+
+    ax.errorbar(strain[:],stress[:],yerr=stress_std[:],marker='o',markersize=4,mfc='w',alpha = 0.9,linestyle='--',capsize=1)
+
+    ax.set_xlabel("$\gamma$")
+    ax.set_ylabel("$\sigma_{xy}$")
+
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+
+    ax.minorticks_on()
+    ax.tick_params(direction='in',which='minor',length=2,right=True,top=True)
+    ax.tick_params(direction='in',which='major',length=5,right=True,top=True)
+
+    #fig.savefig("E:/Hydrogel_sim_experiments/Test1/exp1/Graficas/stress_strain_loglog_1.pdf",dpi=300,bbox_inches='tight')
+    fig.savefig('/media/felipe/KINGSTON/Hydrogel_sim_experiments/Test1/Graficas/stress_strain_loglog.pdf',dpi=300,bbox_inches='tight')
+
+    plt.show()
+
 #Grafica de curvas stress strain de diferentes tamaños de sistema
-def figura2():
+def stress_strain_sz():
     import numpy as np
     import matplotlib as mpl
     import matplotlib.pyplot as plt
@@ -239,8 +426,46 @@ def figura2():
     plt.savefig('D:/ExperimentData/SizeExperiment/graficas/stress_strain_sizes.pdf',dpi=300,bbox_inches='tight')
     plt.show()
 
+def pot_ene_formation():
+    import numpy as np
+    import matplotlib as mpl
+    import matplotlib.pyplot as plt
+    import matplotlib.gridspec as gridspec 
+
+    mpl.rcParams['pdf.fonttype'] = 42
+    mpl.rcParams['font.size'] = 14
+
+    #dir = "/media/felipe/Files/Hydrogel_sim_experiments/SelfAssemby/exp1_mp" #pc escritorio 
+    #dir = "E:/Hydrogel_sim_experiments/Test1/exp1"
+    dir = "/media/felipe/KINGSTON/Hydrogel_sim_experiments/Test1/averaged_data"
+
+    fig1,ax1 = plt.subplots(figsize=(5,5))
+
+    pot_ene = load_json(dir,"pot_ene_formation_ave")
+    pot_ene_std = load_json(dir,"pot_ene_formation_std")
+    frames = load_json(dir,"pot_ene_formation_frames_ave")
+    time = [float(i)*0.002 for i in frames]
+
+    ax1.plot(time,pot_ene)
+    ax1.errorbar(time[::30],pot_ene[::30],yerr=pot_ene_std[::30],capsize=2,linestyle="None",marker="s",mfc="w",markersize=3)
+
+    #Labels
+    ax1.set_ylabel('Potential Energy')
+    ax1.set_xlabel('Time')
+
+    #Ticks
+    #ax1.set_xticks(np.arange(0,9))
+    #ax.set_yticks(np.arange(0,1.31,0.4))
+    ax1.minorticks_on()
+    ax1.tick_params(direction='in',which='minor',length=2,right=True,top=True)
+    ax1.tick_params(direction='in',which='major',length=5,right=True,top=True)
+
+    fig1.savefig("/media/felipe/KINGSTON/Hydrogel_sim_experiments/Test1/Graficas/pot_ene_formation.pdf",dpi=300,bbox_inches='tight')
+
+    plt.show()
+
 #Grafica de curvas stress strain en escala log-log
-def figura3():
+def stress_strain_loglog_size():
     import numpy as np
     import matplotlib as mpl
     import matplotlib.pyplot as plt
@@ -250,13 +475,11 @@ def figura3():
     mpl.rcParams['font.size'] = 14
 
     #Directorios con datos
-    dir = "/media/felipe/Files/Hydrogel_sim_experiments/SizeExperiments/16k_particles/averaged_data" #pc escritorio
+    #dir = "/media/felipe/Files/Hydrogel_sim_experiments/SizeExperiments/16k_particles/averaged_data" #pc escritorio
     #dir = "D:/ExperimentData/SizeExperiment/16k_particles/averaged_data" #laptop
+    dir = "/media/felipe/KINGSTON/Hydrogel_sim_experiments/Test1/averaged_data"
 
-    strain = load_json(dir,"strain")
-    for i,x in enumerate(strain):
-        if x < 0:
-            strain[i] = x+1
+    strain = load_json(dir,"analysis_strain_ave")
     strain.pop(0) #Quitar el frame 0 del strain
 
     allsigma = []
@@ -1164,142 +1387,6 @@ def fractal_dimension():
 
     plt.show()
 
-def pot_ene_formation():
-    import numpy as np
-    import matplotlib as mpl
-    import matplotlib.pyplot as plt
-    import matplotlib.gridspec as gridspec 
-
-    mpl.rcParams['pdf.fonttype'] = 42
-    mpl.rcParams['font.size'] = 14
-
-    #Directorios con datos
-    dir = "/media/felipe/Files/Hydrogel_sim_experiments/SizeExperiments/16k_particles" #pc escritorio 
-    #dir = "" #laptop
-
-    expnum = 5
-
-    pot_ene = []
-
-    for exp in range(1,expnum+1):
-        print(exp)
-        cdir = f"{dir}/exp{exp}"
-        pot_ene.append([row[1] for row in load_data(cdir,f"pot_ene_formation_16k_{exp}.data")])
-
-
-    #Crear figura
-    fig = plt.figure(1,figsize=(5,5))
-
-    #Gridspec para subplots
-    gs = gridspec.GridSpec(5,4)
-    gs.update(wspace=0.2,hspace=0)
-
-    #Crear subplot1 y graficar
-    subplot1 = fig.add_subplot(gs[0,0:4])
-    #subplot1.plot(np.linspace(0,2,50),phi2[:50],marker='s',markersize=2,mfc='w',linestyle='-')
-    subplot1.plot(np.arange(0,len(pot_ene[0])),pot_ene[0])
-
-    #Labels
-
-    #Limits
-    subplot1.set_xlim((-1,570))
- 
-    #Ticks
-    #subplot1.set_xticks(np.arange(0,2.1,0.4))
-    #subplot1.set_yticks(np.arange(0,0.0041,0.001))
-    
-    subplot1.tick_params(direction='in',length=5,right=True,top=True)
-    subplot1.minorticks_on()
-    subplot1.tick_params(direction='in',which='minor',length=2,right=True,top=True)
-    subplot1.tick_params(direction='in',which='major',length=5,right=True,top=True)
-    subplot1.tick_params(labelbottom=False)
-
-
-    #Crear subplot2 y graficar
-    subplot2 = fig.add_subplot(gs[1,0:4])
-    #subplot1.plot(np.linspace(0,2,50),phi2[:50],marker='s',markersize=2,mfc='w',linestyle='-')
-    subplot2.plot(np.arange(0,len(pot_ene[1])),pot_ene[1])
-
-    #Labels
-
-    #Limits
-    subplot2.set_xlim((-1,570))
- 
-    #Ticks
-    #subplot1.set_xticks(np.arange(0,2.1,0.4))
-    #subplot1.set_yticks(np.arange(0,0.0041,0.001))
-    
-    subplot2.tick_params(direction='in',length=5,right=True,top=True)
-    subplot2.minorticks_on()
-    subplot2.tick_params(direction='in',which='minor',length=2,right=True,top=True)
-    subplot2.tick_params(direction='in',which='major',length=5,right=True,top=True)
-    subplot2.tick_params(labelbottom=False)
-
-    #Crear subplot3 y graficar
-    subplot3 = fig.add_subplot(gs[2,0:4])
-    #subplot1.plot(np.linspace(0,2,50),phi2[:50],marker='s',markersize=2,mfc='w',linestyle='-')
-    subplot3.plot(np.arange(0,len(pot_ene[2])),pot_ene[2])
-
-    #Labels
-    subplot3.set_ylabel(r'$U\left(\vec{r}\right)$')
-
-    #Limits
-    subplot3.set_xlim((-1,570))
- 
-    #Ticks
-    #subplot1.set_xticks(np.arange(0,2.1,0.4))
-    #subplot1.set_yticks(np.arange(0,0.0041,0.001))
-    
-    subplot3.tick_params(direction='in',length=5,right=True,top=True)
-    subplot3.minorticks_on()
-    subplot3.tick_params(direction='in',which='minor',length=2,right=True,top=True)
-    subplot3.tick_params(direction='in',which='major',length=5,right=True,top=True)
-    subplot3.tick_params(labelbottom=False)
-
-    #Crear subplot4 y graficar
-    subplot4 = fig.add_subplot(gs[3,0:4])
-    #subplot1.plot(np.linspace(0,2,50),phi2[:50],marker='s',markersize=2,mfc='w',linestyle='-')
-    subplot4.plot(np.arange(0,len(pot_ene[3])),pot_ene[3])
-
-    #Labels
-
-    #Limits
-    subplot4.set_xlim((-1,570))
- 
-    #Ticks
-    #subplot1.set_xticks(np.arange(0,2.1,0.4))
-    #subplot1.set_yticks(np.arange(0,0.0041,0.001))
-    
-    subplot4.tick_params(direction='in',length=5,right=True,top=True)
-    subplot4.minorticks_on()
-    subplot4.tick_params(direction='in',which='minor',length=2,right=True,top=True)
-    subplot4.tick_params(direction='in',which='major',length=5,right=True,top=True)
-    subplot4.tick_params(labelbottom=False)
-
-    #Crear subplot5 y graficar
-    subplot5 = fig.add_subplot(gs[4,0:4])
-    #subplot1.plot(np.linspace(0,2,50),phi2[:50],marker='s',markersize=2,mfc='w',linestyle='-')
-    subplot5.plot(np.arange(0,len(pot_ene[4])),pot_ene[4])
-
-    #Labels
-    subplot5.set_xlabel("Time")
-
-    #Limits
-    subplot5.set_xlim((-1,570))
- 
-    #Ticks
-    #subplot1.set_xticks(np.arange(0,2.1,0.4))
-    #subplot1.set_yticks(np.arange(0,0.0041,0.001))
-    
-    subplot5.tick_params(direction='in',length=5,right=True,top=True)
-    subplot5.minorticks_on()
-    subplot5.tick_params(direction='in',which='minor',length=2,right=True,top=True)
-    subplot5.tick_params(direction='in',which='major',length=5,right=True,top=True)
-
-    fig.savefig('/media/felipe/Files/Hydrogel_sim_experiments/SizeExperiments/Graficas/pot_ene_formation.pdf',dpi=300,bbox_inches='tight')
-
-    plt.show()
-
 def distr_vecinos():
     import numpy as np
     import matplotlib as mpl
@@ -1375,7 +1462,7 @@ def pot_ene_formation_se():
     plt.show()
 
 #Grafica stress-strain con los datos de analisis comparados verticalmente
-def figura1_se():
+def stress_strain_basic_analysis_se():
     import numpy as np
     import matplotlib as mpl
     import matplotlib.pyplot as plt
@@ -1386,7 +1473,8 @@ def figura1_se():
 
     #Directorios con datos
     #dir = "/media/felipe/Files/Hydrogel_sim_experiments/SizeExperiments/16k_particles/averaged_data" #pc escritorio 
-    dir = "E:/Hydrogel_sim_experiments/Test1/exp1/analysis_results" #usb
+    #dir = "E:/Hydrogel_sim_experiments/Test1/exp1/analysis_results" #usb
+    dir = "/media/felipe/KINGSTON/Hydrogel_sim_experiments/Test1/exp4/analysis_results"
 
     #importar datos de estres y strain promediados
     stress_v_t = load_json(dir,"analysis_stress")
@@ -1521,11 +1609,12 @@ def figura1_se():
     plt.tick_params(direction='in',which='minor',length=2,right=True,top=True)
     plt.tick_params(direction='in',which='major',length=5,right=True,top=True)
 
-    fig.savefig("E:/Hydrogel_sim_experiments/Test1/exp1/Graficas/BasicAnalysis_1.pdf",dpi=300,bbox_inches='tight')
+    #fig.savefig("E:/Hydrogel_sim_experiments/Test1/exp1/Graficas/BasicAnalysis_1.pdf",dpi=300,bbox_inches='tight')
     
     plt.show()
 
-def figura3_se():
+#stress-strain log-log
+def stress_strain_loglog_se():
     import numpy as np
     import matplotlib as mpl
     import matplotlib.pyplot as plt
@@ -1572,7 +1661,8 @@ def xldistance_se():
 
     #Directorios con datos
     #dir = "/media/felipe/Files/Hydrogel_sim_experiments/SizeExperiments/16k_particles/averaged_data" #pc escritorio 
-    dir = "E:/Hydrogel_sim_experiments/Test1/exp1/analysis_results" #usb
+    #dir = "E:/Hydrogel_sim_experiments/Test1/exp2/analysis_results" #usb
+    dir = "/media/felipe/KINGSTON/Hydrogel_sim_experiments/Test1/exp4/analysis_results"
 
     #importar datos de estres y strain promediados
     stress_v_t = load_json(dir,"analysis_stress")
@@ -1695,29 +1785,21 @@ def xldistance_se():
     plt.tick_params(direction='in',which='major',length=5,right=True,top=True)
     #plt.tick_params(labelbottom=False)
 
-    fig.savefig("E:/Hydrogel_sim_experiments/Test1/exp1/Graficas/xldistance_1.pdf",dpi=300,bbox_inches='tight')
+    #fig.savefig("E:/Hydrogel_sim_experiments/Test1/exp1/Graficas/xldistance_1.pdf",dpi=300,bbox_inches='tight')
     
     plt.show()
 
 def main():
 
-    #figura1()
-    #figura2()
-    #figura3()
-    #figura4()
-    #figura5()
-    #figura6()
-    #figura7()
-    #figura8()
-    #ajuste8()
+    #stress_strain_basic_analysis()
+    #stress_strain_xl_distance()
+    #stress_strain_loglog()
     #demixing_param()
     #fractal_dimension()
-    #pot_ene_formation()
+    pot_ene_formation()
     #distr_vecinos()
     #pot_ene_formation_se()
-    #figura1_se()
-    #figura3_se()
-    xldistance_se()
+    #xldistance_se()
 
 if __name__ == '__main__':
     main()
