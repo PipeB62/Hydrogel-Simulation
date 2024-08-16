@@ -4,7 +4,7 @@ import sys
 
 
 #Pedir al usuario parametros de simulacion
-L,shear_rate,directory,last_name = sys.argv[1:]
+L,shear_rate,savedir,system_formation,inputfilesdir,last_name = sys.argv[1:]
 L = float(L)
 shear_rate = float(shear_rate)
 
@@ -14,12 +14,12 @@ for i in range(10):
     seeds.append(randint(100000, 999999))
 
 #Parametros fijos
-save_every = 10000
+save_every = 100000
 timestep = 0.001
 damp = 0.1 
 temp = 0.05 #Temperatura objetivo
 
-max_strain = 10
+max_strain = 20
 delta_gamma = 0.01
 
 flip_strain = 0.5*L
@@ -39,9 +39,9 @@ inicializacion = (f"log log_shearing_{last_name}.lammps \n\n"
 
 #Definir interacciones. centro-centro = lj. xl-xl = patches.sw. threebody para xl-xl-xl
 pair_definitions = ("pair_style hybrid/overlay lj/cut 1.122462 sw threebody off threebody/table\n"
-                    f"pair_coeff * * threebody/table {directory}/input_data/threebody.3b NULL Mon NULL Xl\n"
-                    f"pair_coeff 2 4 sw {directory}/input_data/patches.sw NULL Mon NULL Xl\n"
-                    f"pair_coeff 2 2 sw {directory}/input_data/patches.sw NULL Mon NULL Xl\n"
+                    f"pair_coeff * * threebody/table {inputfilesdir}/threebody.3b NULL Mon NULL Xl\n"
+                    f"pair_coeff 2 4 sw {inputfilesdir}/patches.sw NULL Mon NULL Xl\n"
+                    f"pair_coeff 2 2 sw {inputfilesdir}/patches.sw NULL Mon NULL Xl\n"
                     "pair_coeff 4 4 none\n"
                     "pair_coeff 1 1 lj/cut 1.0 1.0\n"
                     "pair_coeff 1 2 none\n"
@@ -55,16 +55,19 @@ pair_definitions = ("pair_style hybrid/overlay lj/cut 1.122462 sw threebody off 
 bonds_angles = ("bond_style harmonic \n"
                 "angle_style harmonic \n\n")
 
-#imporar y cambiar caja
-read_system = (f"read_data {directory}/system_formation_{last_name}.data extra/special/per/atom 10 \n" 
+#importar y cambiar caja
+#read_system = (f"read_data {directory}/system_formation_{last_name}.data extra/special/per/atom 10 \n" 
+#               "change_box all triclinic \n\n") 
+
+read_system = (f"read_data {system_formation} extra/special/per/atom 10 \n" 
                "change_box all triclinic \n\n") 
 
 #Computes dentro de lammps
 pressure = ("compute presion all pressure NULL pair bond \n"
-           f"fix presion_ave all ave/time 1 {n_pres_av} {shear_every} c_presion[*] file {directory}/presion_ave_shearing_{last_name}.data \n\n")
+           f"fix presion_ave all ave/time 1 {n_pres_av} {shear_every} c_presion[*] file {savedir}/presion_ave_shearing_{last_name}.data \n\n")
 
 #Visualizacion
-visualization = (f"dump mydmp all atom {shear_every} {directory}/dump_shearing_{last_name}.lammpstrj \n"
+visualization = (f"dump mydmp all atom {shear_every} {savedir}/dump_shearing_{last_name}.lammpstrj \n"
                   "dump_modify mydmp scale no \n\n"
                  f"thermo {save_every} \n"
                   "thermo_style custom step temp xy c_presion[4] \n\n")
@@ -86,11 +89,11 @@ shear = (f"variable n_loop loop {n} \n"
          "next n_loop \n"
          "jump SELF runloop \n\n")
 
-write_data = f"write_data {directory}/system_shearing_{last_name}.data"
+write_data = f"write_data {savedir}/system_shearing_{last_name}.data"
 
 input_file = [inicializacion,bonds_angles,read_system,pair_definitions,pressure,visualization,fix_nve,langevin,
               shear,write_data]
-with open(f"{directory}/input_shearing_{last_name}.lammps","a") as f:  
+with open(f"{savedir}/input_shearing_{last_name}.lammps","a") as f:  
     f.truncate(0)
     f.writelines(input_file)
 

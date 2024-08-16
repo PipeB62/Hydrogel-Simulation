@@ -34,7 +34,7 @@ r_min = sigma
 lam = float(sys.argv[1])
 eps = 1
 
-inputfilesdir = f"{sys.argv[3]}/input_data"
+inputfilesdir = sys.argv[3]
 
 minR = 0.01
 maxR = r_c-0.001

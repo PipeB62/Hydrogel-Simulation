@@ -5,7 +5,7 @@ def main():
     #dar como argumento sigma y directorio del experimento
 
     sigma = float(sys.argv[1])
-    savedir = f"{sys.argv[2]}/input_data"
+    savedir = sys.argv[2]
 
     table = (
         "#            eps   sigma   a lambda gamma cos(theta)     A       B     p   q  tol\n"

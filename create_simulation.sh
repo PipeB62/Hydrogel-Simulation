@@ -25,7 +25,7 @@ cd ../self_assembly
 python3 create_input_selfassembly_v2.py $L $xl_num $mon_num $lam $sigma $l $directorio $apellido
 
 cd ../shearing
-python3 create_input_shearing.py $L $shear_rate $directorio $apellido
+python3 create_input_shearing.py $L $shear_rate $directorio "$directorio/system_formation_$apellido.data" $apellido
 
 touch "$directorio/PARAMETERS.txt"
 printf "L = $L \nxl_num = $xl_num \nmon_num = $mon_num \nlambda (3b) = $lam \nsigma (patches) = $sigma \nl (c-p) = $l \nshear rate = $shear_rate" > "$directorio/PARAMETERS.txt"

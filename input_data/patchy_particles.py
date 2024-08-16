@@ -5,7 +5,7 @@ def main():
     #Se da como argumento la longitud centro-patch y directorio del experimento
 
     l = float(sys.argv[1])
-    savedir = f"{sys.argv[2]}/input_data"
+    savedir = sys.argv[2]
 
     mon = (
         "#monomer\n\n"

@@ -5,9 +5,9 @@ import sys
 #Dar como input L (longitud de caja), numero de xl, numero de monomeros, lambda (tres cuerpos), sigma (3b),directorio, l (longitud centro-patch), , y apellido del archivo
 
 #Pedir al usuario parametros de simulacion
-L,xl_num,mon_num,lam,sigma,l,directory,last_name = sys.argv[1:]
+L,xl_num,mon_num,l_cp,savedir,inputfilesdir,last_name = sys.argv[1:]
 L = float(L)
-inputfilesdir = f"{directory}/input_data"
+#inputfilesdir = f"{directory}/input_data"
 
 #Generar semillas
 seeds = []
@@ -15,7 +15,7 @@ for i in range(10):
     seeds.append(randint(100000, 999999))
 
 #Parametros fijos
-save_every = 10000
+save_every = 100000
 timestep = 0.002
 temp = 0.05 #Temperatura objetivo
 damp = 0.1 
@@ -60,7 +60,7 @@ pair_definitions = ("pair_style hybrid/overlay lj/cut 1.122462 sw threebody off 
 
 #Definir bonds y angles armonicos para uniones centro-patch
 bonds_angles = ("bond_style harmonic \n"
-                f"bond_coeff 1 100.0 {l} \n\n"
+                f"bond_coeff 1 100.0 {l_cp} \n\n"
                 "angle_style harmonic \n"
                 "angle_coeff 1 100.0 180 \n"
                 "angle_coeff 2 100.0 109.4712 \n\n")
@@ -77,7 +77,7 @@ computes = ("compute pot_ene all pe \n"
             "compute k_ene all ke \n\n")
 
 #Visualizacion
-visualization = (f"dump mydmp all atom {save_every} {directory}/dump_formation_{last_name}.lammpstrj \n"
+visualization = (f"dump mydmp all atom {save_every} {savedir}/dump_formation_{last_name}.lammpstrj \n"
                  "dump_modify mydmp scale no \n"
                  f"thermo {save_every} \n\n")
 
@@ -85,8 +85,8 @@ visualization = (f"dump mydmp all atom {save_every} {directory}/dump_formation_{
 minimize_energy = "minimize 1.0e-4 1.0e-6 1000 100000 \n\n"
 
 #Guardar energia potencial en archivo
-fix_save_energy = (f"fix save_pot_ene all ave/time 1 1 {save_every} c_pot_ene file {directory}/pot_ene_formation_{last_name}.data \n"
-                   f"fix save_k_ene all ave/time 1 1 {save_every} c_k_ene file {directory}/k_ene_formation_{last_name}.data \n\n")
+fix_save_energy = (f"fix save_pot_ene all ave/time 1 1 {save_every} c_pot_ene file {savedir}/pot_ene_formation_{last_name}.data \n"
+                   f"fix save_k_ene all ave/time 1 1 {save_every} c_k_ene file {savedir}/k_ene_formation_{last_name}.data \n\n")
 
 
 #Definir dinamica NVE 
@@ -103,12 +103,12 @@ fase2 = (f"fix thermostat all langevin {temp} {temp} {damp} {seeds[5]} \n"
 
 
 #Guardar sistema final
-write_data = f"write_data {directory}/system_formation_{last_name}.data"
+write_data = f"write_data {savedir}/system_formation_{last_name}.data"
 
 
 #Crear y escribir. Reescribir si el archivo ya existe
 input_file = [inicializacion,sim_box,atom_types,pair_definitions,bonds_angles,spawn,computes,visualization,
               minimize_energy,fix_save_energy,fix_nve,fase1,fase2,write_data]
-with open(f"{directory}/input_formation_{last_name}.lammps","a") as f:  
+with open(f"{savedir}/input_formation_{last_name}.lammps","a") as f:  
     f.truncate(0)
     f.writelines(input_file)

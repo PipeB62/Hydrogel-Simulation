@@ -354,6 +354,36 @@ function real_distance(c_id1::Int64,
 
 end
 
+function get_curvature(chainids::Vector{Int64},
+    centers_coords::Vector{SVector{3,Float64}},
+    centers_id::Vector{SVector{2,Int64}})
+
+    R = Vector{SVector{3,Float64}}(undef,length(chainids))
+
+    for k in eachindex(chainids)
+        c_id = chainids[k]
+        for i in eachindex(centers_id)
+            if centers_id[i][1] == c_id
+                R[k] = centers_coords[i]
+                break
+            end
+        end
+    end
+
+    t = Vector{SVector{3,Float64}}(undef,length(chainids)-1)
+    for i in 1:length(R)-1
+        t[i]=(R[i+1]-R[i])/norm(R[i+1]-R[i])
+    end
+
+    kappa_ds = Vector{Float64}(undef,length(chainids)-2)
+    for i in 1:length(t)-1
+        kappa_ds[i]=sqrt(2*(1-cdot(t[i],t[i+1])))
+    end
+
+    kappa = sum(kappa_ds)
+
+end
+
 #Guarda los datos en un archivo json
 function write_json(savedir,data,name)
     json_string = JSON.json(data)
@@ -374,7 +404,7 @@ function main()
 
     frame_num = read_frame_num(dumpdir)
 
-    calc_frames_num = 100
+    calc_frames_num = 50
     calc_frames_step = floor(frame_num/calc_frames_num)
     calc_frames = 1:calc_frames_step:frame_num
     #calc_frames = [1]
@@ -383,12 +413,14 @@ function main()
 
     dump = open(dumpdir,"r") #Abrir dump
 
-    mean_coordination = Vector{Float64}()
-    mean_distance = Vector{Float64}()
-    std_distance = Vector{Float64}()
+    mean_linked_chain_length_v_t = Vector{Float64}()
+    mean_dangling_chain_length_v_t = Vector{Float64}()
+    mean_total_chain_length_v_t = Vector{Float64}()
+    #std_chain_length_v_t = Vector{Float64}()
+    dangling_chains_num_v_t = Vector{Float64}()
+    linked_chains_num_v_t = Vector{Float64}()
+    mean_curvature_v_t = Vector{Float64}()
 
-    selected_xls = [2391,1631,2446,1481,1466,56,156,3201,2986,2911,2706,1901]
-    selected_avdistances_v_t = Vector{Vector{Float64}}()
     for frame in 1:frame_num
 
         timestep,n,L,xy = read_dump_info(dump) #Leer informacion del dump en el frame actual
@@ -399,7 +431,7 @@ function main()
             a = SVector{3,Float64}([L,0,0])
             b = SVector{3,Float64}([xy,L,0])
             c = SVector{3,Float64}([0,0,L])
-            
+
             println("Frame: ",frame)
             centers_coords,centers_id,patches_coords,patches_id = read_dump_particles(dump,n) #Leer coordenadas y id del dump en el frame actual
             centers_coords = fix_boundaries(centers_coords,xy,L) #Asegurar que todas las particulas esten dentro de la caja
@@ -410,78 +442,98 @@ function main()
 
             xl_list = get_xl_list(centers_id)
             r_c = 0.5 #Radio cutoff para determinar vecinos patch-patch
-
-            xl_coordinations = Vector{Int64}()
-            av_distances = Vector{Float64}()
-            selected_avdistances = Vector{Float64}(undef,length(selected_xls))
+            
+            loops = 0
+            dangling_chains = 0
+            linked_chain_length_histogram = zeros(Int64,60)
+            chain_lengths_total = Vector{Float64}()
+            chain_lengths_linked = Vector{Float64}()
+            chain_lengths_dangling = Vector{Float64}()
+            curvature = Vector{Float64}()
             for c_xl in xl_list
                 #print(c_xl, " ")
-                queue = Vector{Int64}() #Cola
-                visited = Vector{Int64}() #Nodos visitados
-                push!(queue,c_xl)
-                push!(visited,c_xl)
-                
-                linked_xls = Vector{Int64}()
 
-                safe = 1
-                while length(queue)>0
+                chain_starts = get_neigbors(c_xl,patches_id,patches_coords,patches_id_periodic,patches_tree,bonds,r_c)
 
-                    c_node = first(queue) #Obtener nodo actual con el primer elemento del queue
-                    popfirst!(queue) #Quitar primer elemento del queue
-                    c_neighs = get_neigbors(c_node,patches_id,patches_coords,patches_id_periodic,patches_tree,bonds,r_c)
-                    for cn in c_neighs
-                        if get_type(cn,centers_id) == "mon" && !(cn in visited)
-                            push!(queue,cn)
-                            push!(visited,cn)
-                        elseif get_type(cn,centers_id) == "xl" && !(cn in visited) && !(cn in linked_xls)
-                            push!(linked_xls,cn)
-                            push!(visited,cn)
+                for mon_0 in chain_starts
+                    
+                    xlEnd = -1
+                    queue = Vector{Int64}() #Cola
+                    visited = Vector{Int64}() #Nodos visitados
+                    push!(queue,mon_0)
+                    push!(visited,mon_0)
+
+                    safe = 1
+                    while length(queue)>0
+
+                        c_node = first(queue) #Obtener nodo actual con el primer elemento del queue
+                        popfirst!(queue) #Quitar primer elemento del queue
+                        c_neighs = get_neigbors(c_node,patches_id,patches_coords,patches_id_periodic,patches_tree,bonds,r_c) #obtener vecinos del nodo actual
+                        if c_node == mon_0
+                            deleteat!(c_neighs, findall(x->x==c_xl, c_neighs)) #qutar c_xl de la lista de vecinos para el primer nodo
+                        end
+                        #BFS
+                        for cn in c_neighs
+                            if get_type(cn,centers_id) == "mon" && !(cn in visited)
+                                push!(queue,cn)
+                                push!(visited,cn)
+                            elseif get_type(cn,centers_id) == "xl" && !(cn in visited) 
+                                xlEnd=cn
+                                if cn == c_xl
+                                    loops+=1 
+                                    println("loop ",c_xl," ",mon_0)
+                                end
+                            end
+                        end
+                        safe+=1
+                        if safe > 100_000
+                            println("SAFE")
+                            break
                         end
                     end
-                    safe+=1
-                    if safe > 100_000
-                        println("SAFE")
-                        break
-                    end
-                end
 
-                for i in eachindex(selected_xls)
-                    if c_xl == selected_xls[i]
-                        av_distance = 0
-                        for l_xl in linked_xls
-                            av_distance += real_distance(c_xl,l_xl,centers_coords,centers_id,a,b,c)
+                    s_chain = 2^(1/6)*length(visited)#Longitud de la cadena. +2 para contar los cross linkers
+
+                    push!(chain_lengths_total,s_chain) 
+
+                    if xlEnd==-1 #Si no termino en un cross linker (dangling)
+                        dangling_chains+=1
+                        push!(chain_lengths_dangling,s_chain)
+                    else #Si la cadena une dos cross linkers
+                        push!(chain_lengths_linked,s_chain)
+                        linked_chain_length_histogram[length(visited)]+=1
+
+                        if length(visited)>3
+                            kappa = get_curvature(visited,centers_coords,centers_id)
+                            push!(curvature,kappa)
                         end
-                        av_distance = av_distance/length(linked_xls)
-                        selected_avdistances[i] = av_distance
                     end
-                end
-                
-
-                if length(linked_xls)>0
-                    av_distance = 0
-                    for l_xl in linked_xls
-                        av_distance += real_distance(c_xl,l_xl,centers_coords,centers_id,a,b,c)
-                        #push!(av_distances,real_distance(c_xl,l_xl,centers_coords,centers_id,L))
-                    end
-                    av_distance = av_distance/length(linked_xls)
-                    push!(xl_coordinations,length(linked_xls))
-                    push!(av_distances,av_distance)
-                else
-                    push!(xl_coordinations,0)
-                    push!(av_distances,0.0)
                 end
             end
-            
-            println("Mean coordination: ",mean(xl_coordinations))
-            push!(mean_coordination,mean(xl_coordinations))
 
-            c_mean_distances,c_std_distances = mean_std(av_distances)
-            println("Mean distance: ",c_mean_distances)
-            println("StD distance: ",c_std_distances)
-            push!(mean_distance,c_mean_distances)
-            push!(std_distance,c_std_distances)
+            linked_chain_length_histogram = linked_chain_length_histogram./2 #Las cadenas linked se estan contando doble
 
-            push!(selected_avdistances_v_t,selected_avdistances)
+            println("Loops: ",loops)
+
+            println("Dangling_chains: ",dangling_chains)
+            push!(dangling_chains_num_v_t,dangling_chains)
+
+            println("Linked chains: ",sum(linked_chain_length_histogram))
+            push!(linked_chains_num_v_t,sum(linked_chain_length_histogram))
+
+            println("Linked chain length histogram: ",linked_chain_length_histogram)
+
+            println("Mean curvature: ",mean(curvature))
+            push!(mean_curvature_v_t,mean(curvature))
+
+            println("Mean total chain length: ", mean(chain_lengths_total))
+            push!(mean_total_chain_length_v_t,mean(chain_lengths_total))
+
+            println("Mean dangling chain length: ", mean(chain_lengths_dangling))
+            push!(mean_dangling_chain_length_v_t,mean(chain_lengths_dangling))
+
+            println("Mean linked chain length: ", mean(chain_lengths_linked))
+            push!(mean_linked_chain_length_v_t,mean(chain_lengths_linked))
 
         else
             for _ in 1:n
@@ -492,18 +544,15 @@ function main()
     close(dump)
 
     savedir = dir * "/" * "analysis_results"
-    #println("Coordination: ",mean_coordination)
-    write_json(savedir,mean_coordination,"mean_xl_coord_v_t")
-    #println("Distances: ",mean_distance)
-    write_json(savedir,mean_distance,"mean_xl_distance_v_t")
-
-    write_json(savedir,std_distance,"std_xl_distance_v_t")
-
-    write_json(savedir,calc_frames,"xldistance_calcframes")
-
-    write_json(savedir,selected_avdistances_v_t,"selected_avdistances_v_t")
-
+    
+    write_json(savedir,dangling_chains_num_v_t,"dangling_chains_num_v_t")
+    write_json(savedir,linked_chains_num_v_t,"linked_chains_num_v_t")
+    write_json(savedir,mean_curvature_v_t,"mean_curvature_v_t")
+    write_json(savedir,mean_total_chain_length_v_t,"mean_total_chain_length_v_t")
+    write_json(savedir,mean_dangling_chain_length_v_t,"mean_dangling_chain_length_v_t")
+    write_json(savedir,mean_linked_chain_length_v_t,"mean_linked_chain_length_v_t")
+    write_json(savedir,calc_frames,"chain_analysis_calcframes")
+   
 end
 
 main()
-
