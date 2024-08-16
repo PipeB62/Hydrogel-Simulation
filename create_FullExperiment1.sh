@@ -51,5 +51,10 @@ do
     done
 done
 
-touch $directory/FullExperiment1/PARAMETERS.txt
-printf "L = $L \nxl_num = $N_xl \nmon_num = $N_mon \nlambda (3b) = $lam \nsigma (patches) = $sigma \nl (c-p) = $l_cp \nshear rate = ${shear_rate[@]}" > "$directorio/PARAMETERS.txt"
+echo "L = $L" >> $directory/FullExperiment1/PARAMETERS.txt 
+echo "xl_num = $N_xl" >> $directory/FullExperiment1/PARAMETERS.txt
+echo "mon_num = $N_mon" >> $directory/FullExperiment1/PARAMETERS.txt
+echo "lambda (3b) = $lam" >> $directory/FullExperiment1/PARAMETERS.txt
+echo "sigma (patches) = $sigma" >> $directory/FullExperiment1/PARAMETERS.txt
+echo "l (c-p) = $l_cp" >> $directory/FullExperiment1/PARAMETERS.txt 
+echo "shear rate = ${shear_rate[@]}" >> $directory/FullExperiment1/PARAMETERS.txt
