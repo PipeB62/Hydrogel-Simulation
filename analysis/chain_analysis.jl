@@ -394,17 +394,22 @@ end
 
 function main()
 
-    dir = ARGS[1]
-    dumpp = ARGS[2]
-    system = ARGS[3]
+    #dir = ARGS[1]
+    #dumpp = ARGS[2]
+    #system = ARGS[3]
 
-    dumpdir = dir * "/" * dumpp
-    systemdir = dir * "/" * system
+    #dumpdir = dir * "/" * dumpp
+    #systemdir = dir * "/" * system
 
+    dumpdir = ARGS[1]
+    systemdir = ARGS[2]
+    savedir = ARGS[3]
+
+    println("Inicio chain analysis")
 
     frame_num = read_frame_num(dumpdir)
 
-    calc_frames_num = 50
+    calc_frames_num = 100
     calc_frames_step = floor(frame_num/calc_frames_num)
     calc_frames = 1:calc_frames_step:frame_num
     #calc_frames = [1]
@@ -416,10 +421,11 @@ function main()
     mean_linked_chain_length_v_t = Vector{Float64}()
     mean_dangling_chain_length_v_t = Vector{Float64}()
     mean_total_chain_length_v_t = Vector{Float64}()
-    #std_chain_length_v_t = Vector{Float64}()
+    std_total_chain_length_v_t = Vector{Float64}()
     dangling_chains_num_v_t = Vector{Float64}()
     linked_chains_num_v_t = Vector{Float64}()
     mean_curvature_v_t = Vector{Float64}()
+    loopnum_v_t = Vector{Float64}()
 
     for frame in 1:frame_num
 
@@ -432,7 +438,7 @@ function main()
             b = SVector{3,Float64}([xy,L,0])
             c = SVector{3,Float64}([0,0,L])
 
-            println("Frame: ",frame)
+            #println("Frame: ",frame)
             centers_coords,centers_id,patches_coords,patches_id = read_dump_particles(dump,n) #Leer coordenadas y id del dump en el frame actual
             centers_coords = fix_boundaries(centers_coords,xy,L) #Asegurar que todas las particulas esten dentro de la caja
             patches_coords = fix_boundaries(patches_coords,xy,L) #Asegurar que todas las particulas esten dentro de la caja
@@ -445,7 +451,7 @@ function main()
             
             loops = 0
             dangling_chains = 0
-            linked_chain_length_histogram = zeros(Int64,60)
+            linked_chain_length_histogram = zeros(Int64,100)
             chain_lengths_total = Vector{Float64}()
             chain_lengths_linked = Vector{Float64}()
             chain_lengths_dangling = Vector{Float64}()
@@ -481,7 +487,7 @@ function main()
                                 xlEnd=cn
                                 if cn == c_xl
                                     loops+=1 
-                                    println("loop ",c_xl," ",mon_0)
+                                    #println("loop ",c_xl," ",mon_0)
                                 end
                             end
                         end
@@ -513,27 +519,31 @@ function main()
 
             linked_chain_length_histogram = linked_chain_length_histogram./2 #Las cadenas linked se estan contando doble
 
-            println("Loops: ",loops)
+            #println("Loops: ",loops)
 
-            println("Dangling_chains: ",dangling_chains)
+            #println("Dangling_chains: ",dangling_chains)
             push!(dangling_chains_num_v_t,dangling_chains)
 
-            println("Linked chains: ",sum(linked_chain_length_histogram))
+            #println("Linked chains: ",sum(linked_chain_length_histogram))
             push!(linked_chains_num_v_t,sum(linked_chain_length_histogram))
 
-            println("Linked chain length histogram: ",linked_chain_length_histogram)
+            #println("Linked chain length histogram: ",linked_chain_length_histogram)
 
-            println("Mean curvature: ",mean(curvature))
+            #println("Mean curvature: ",mean(curvature))
             push!(mean_curvature_v_t,mean(curvature))
 
-            println("Mean total chain length: ", mean(chain_lengths_total))
-            push!(mean_total_chain_length_v_t,mean(chain_lengths_total))
+            #println("Mean total chain length: ", mean(chain_lengths_total))
+            c_mean_total_chain_length, c_std_total_chain_length = mean_std(chain_lengths_total)
+            push!(mean_total_chain_length_v_t,c_mean_total_chain_length)
+            push!(std_total_chain_length_v_t,c_std_total_chain_length)
 
-            println("Mean dangling chain length: ", mean(chain_lengths_dangling))
+            #println("Mean dangling chain length: ", mean(chain_lengths_dangling))
             push!(mean_dangling_chain_length_v_t,mean(chain_lengths_dangling))
 
-            println("Mean linked chain length: ", mean(chain_lengths_linked))
+            #println("Mean linked chain length: ", mean(chain_lengths_linked))
             push!(mean_linked_chain_length_v_t,mean(chain_lengths_linked))
+
+            push!(loopnum_v_t,loops/2)
 
         else
             for _ in 1:n
@@ -543,16 +553,18 @@ function main()
     end
     close(dump)
 
-    savedir = dir * "/" * "analysis_results"
-    
-    write_json(savedir,dangling_chains_num_v_t,"dangling_chains_num_v_t")
-    write_json(savedir,linked_chains_num_v_t,"linked_chains_num_v_t")
-    write_json(savedir,mean_curvature_v_t,"mean_curvature_v_t")
-    write_json(savedir,mean_total_chain_length_v_t,"mean_total_chain_length_v_t")
-    write_json(savedir,mean_dangling_chain_length_v_t,"mean_dangling_chain_length_v_t")
-    write_json(savedir,mean_linked_chain_length_v_t,"mean_linked_chain_length_v_t")
+    #savedir = dir * "/" * "analysis_results"
+
+    write_json(savedir,loopnum_v_t,"loop_num")
+    write_json(savedir,dangling_chains_num_v_t,"dangling_chains_num")
+    write_json(savedir,linked_chains_num_v_t,"linked_chains_num")
+    write_json(savedir,mean_curvature_v_t,"mean_curvature")
+    write_json(savedir,mean_total_chain_length_v_t,"mean_total_chain_length")
+    write_json(savedir,std_total_chain_length_v_t,"std_total_chain_length")
+    write_json(savedir,mean_dangling_chain_length_v_t,"mean_dangling_chain_length")
+    write_json(savedir,mean_linked_chain_length_v_t,"mean_linked_chain_length")
     write_json(savedir,calc_frames,"chain_analysis_calcframes")
-   
+    
 end
 
 main()

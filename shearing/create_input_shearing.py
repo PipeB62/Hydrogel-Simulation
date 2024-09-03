@@ -4,7 +4,7 @@ import sys
 
 
 #Pedir al usuario parametros de simulacion
-L,shear_rate,savedir,system_formation,inputfilesdir,last_name = sys.argv[1:]
+L,shear_rate,max_strain,savedir,init_system,inputfilesdir,last_name = sys.argv[1:]
 L = float(L)
 shear_rate = float(shear_rate)
 
@@ -19,7 +19,8 @@ timestep = 0.001
 damp = 0.1 
 temp = 0.05 #Temperatura objetivo
 
-max_strain = 20
+#max_strain = 20
+max_strain=int(max_strain)
 delta_gamma = 0.01
 
 flip_strain = 0.5*L
@@ -59,7 +60,7 @@ bonds_angles = ("bond_style harmonic \n"
 #read_system = (f"read_data {directory}/system_formation_{last_name}.data extra/special/per/atom 10 \n" 
 #               "change_box all triclinic \n\n") 
 
-read_system = (f"read_data {system_formation} extra/special/per/atom 10 \n" 
+read_system = (f"read_data {init_system} extra/special/per/atom 10 \n" 
                "change_box all triclinic \n\n") 
 
 #Computes dentro de lammps

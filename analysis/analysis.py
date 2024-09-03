@@ -11,13 +11,13 @@ def write_json(savedir,name,data):
     with open (f'{savedir}/{name}.json','w') as f:
         json.dump(data,f)
 
-def load_data(dir,name):
+def load_data(data):
     import numpy as np
-    a = np.loadtxt(f"{dir}/{name}")
+    a = np.loadtxt(data)
     return a.tolist()
 
 
-def count_bonds_and_clusters(dumpdir):
+def count_bonds_and_clusters(dumpdir,savedir):
     from ovito.io import import_file
     from ovito.modifiers import ClusterAnalysisModifier, CreateBondsModifier
     import numpy as np
@@ -64,19 +64,19 @@ def count_bonds_and_clusters(dumpdir):
         clusternum_v_t.append(data.attributes["ClusterAnalysis.cluster_count"])
         bigclustersz_v_t.append(data.attributes["ClusterAnalysis.largest_size"])
     
-    dir = dumpdir.split('/')
-    dir[-1] = "analysis_results"
-    savedir = '/'.join(dir)
+    #dir = dumpdir.split('/')
+    #dir[-1] = "analysis_results"
+    #savedir = '/'.join(dir)
 
     print('Esribiendo resultados en archivos json')
-    write_json(savedir,"analysis_bonds_v_t",bonds_v_t)
-    write_json(savedir,"analysis_clusternum_v_t",clusternum_v_t)
-    write_json(savedir,"analysis_bigclustersz_v_t",bigclustersz_v_t)
+    write_json(savedir,"bondnum",bonds_v_t)
+    write_json(savedir,"clusternum",clusternum_v_t)
+    write_json(savedir,"bigclustersz",bigclustersz_v_t)
     print('FIN')
 
     #return bonds_v_t,clusternum_v_t,bigclustersz_v_t,x
 
-def non_affine_sq_disp(dumpdir):
+def non_affine_sq_disp(dumpdir,savedir):
     from ovito.io import import_file
     from ovito.modifiers import SelectTypeModifier,AtomicStrainModifier, DeleteSelectedModifier, UnwrapTrajectoriesModifier
     from ovito.pipeline import ReferenceConfigurationModifier
@@ -118,17 +118,17 @@ def non_affine_sq_disp(dumpdir):
         per_particle_dsq = data.particles["Nonaffine Squared Displacement"]
         Dsq_v_t.append(sum(per_particle_dsq)/len(per_particle_dsq))
 
-    dir = dumpdir.split('/')
-    dir[-1] = "analysis_results"
-    savedir = '/'.join(dir)
+    #dir = dumpdir.split('/')
+    #dir[-1] = "analysis_results"
+    #savedir = '/'.join(dir)
 
     print('Esribiendo resultados en archivos json')
-    write_json(savedir,"analysis_Dsq_v_t",Dsq_v_t)
+    write_json(savedir,"Dsq",Dsq_v_t)
     print('FIN')
 
     #return Dsq_v_t,x
 
-def strain(dumpdir):
+def strain(dumpdir,savedir):
     import json
 
     print("Inicio strain")
@@ -166,51 +166,52 @@ def strain(dumpdir):
         strain.append(s)
     dump.close()
 
-    dir = dumpdir.split('/')
-    dir[-1] = "analysis_results"
-    savedir = '/'.join(dir)
+    #dir = dumpdir.split('/')
+    #dir[-1] = "analysis_results"
+    #savedir = '/'.join(dir)
 
     print('Esribiendo resultados en archivos json')
-    write_json(savedir,"analysis_strain",strain)
+    write_json(savedir,"strain",strain)
     print("FIN")
 
-def stress(dir,pres):
+def stress(presdir,savedir):
 
     print("Inicio stress")
 
-    stress = [-row[4] for row in load_data(dir,pres)]
+    stress = [-row[4] for row in load_data(presdir)]
 
     print("Escribiendo resultados en archivos json")
-    write_json(f"{dir}/analysis_results","analysis_stress",stress)
+    write_json(savedir,"stress",stress)
     print("FIN")
 
-def pot_ene_formation(dir,pot_ene):
+def pot_ene_formation(pot_ene_dir,savedir):
     print("Inicio pot_ene_formation")
 
-    pe = [row[1] for row in load_data(dir,pot_ene)]
-    frames = [row[0] for row in load_data(dir,pot_ene)]
+    pe = [row[1] for row in load_data(pot_ene_dir)]
+    frames = [row[0] for row in load_data(pot_ene_dir)]
 
     print("Escribiendo resultados en archivos json")
-    write_json(f"{dir}/analysis_results","pot_ene_formation",pe)
-    write_json(f"{dir}/analysis_results","pot_ene_formation_frames",frames)
+    write_json(savedir,"pot_ene_formation",pe)
+    write_json(savedir,"pot_ene_formation_frames",frames)
     print("FIN")
 
 def main():
     import sys
 
-    dir = sys.argv[1]
-    dump = sys.argv[2]
-    pres = sys.argv[3]
-    pot_ene = sys.argv[4]
+    #dir = sys.argv[1]
+    dumpdir = sys.argv[1]
+    presdir = sys.argv[2]
+    savedir = sys.argv[3]
+    #pot_ene = sys.argv[4]
 
-    dumpdir = "/".join([dir,dump])
+    #dumpdir = "/".join([dir,dump])
 
     print('Iniciando analisis')
-    count_bonds_and_clusters(dumpdir)
-    non_affine_sq_disp(dumpdir)
-    strain(dumpdir)
-    stress(dir,pres)
-    pot_ene_formation(dir,pot_ene)
+    count_bonds_and_clusters(dumpdir,savedir)
+    #non_affine_sq_disp(dumpdir,savedir)
+    strain(dumpdir,savedir)
+    stress(presdir,savedir)
+    #pot_ene_formation(dir,pot_ene)
     print('FIN')
 
 if __name__=="__main__":

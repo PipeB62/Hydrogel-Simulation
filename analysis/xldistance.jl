@@ -35,6 +35,18 @@ function mean_std(v::Vector{Float64})
     return mean,std
 end
 
+function mean_std(v::Vector{Int64})
+    mean = sum(v)/length(v)
+    var = 0 
+    for a in v
+        var += (a-mean)^2
+    end
+    var = var/(length(v)-1)
+    std = sqrt(var)
+
+    return mean,std
+end
+
 function read_frame_num(dumpdir)
     dump = open(dumpdir,"r") 
     frame_num = 0
@@ -364,13 +376,18 @@ end
 
 function main()
 
-    dir = ARGS[1]
-    dumpp = ARGS[2]
-    system = ARGS[3]
+    #dir = ARGS[1]
+    #dumpp = ARGS[2]
+    #system = ARGS[3]
 
-    dumpdir = dir * "/" * dumpp
-    systemdir = dir * "/" * system
+    #dumpdir = dir * "/" * dumpp
+    #systemdir = dir * "/" * system
 
+    dumpdir = ARGS[1]
+    systemdir = ARGS[2]
+    savedir = ARGS[3]
+
+    println("Inicio xl distance")
 
     frame_num = read_frame_num(dumpdir)
 
@@ -384,11 +401,12 @@ function main()
     dump = open(dumpdir,"r") #Abrir dump
 
     mean_coordination = Vector{Float64}()
+    std_coordination = Vector{Float64}()
     mean_distance = Vector{Float64}()
     std_distance = Vector{Float64}()
 
-    selected_xls = [2391,1631,2446,1481,1466,56,156,3201,2986,2911,2706,1901]
-    selected_avdistances_v_t = Vector{Vector{Float64}}()
+    #selected_xls = [2391,1631,2446,1481,1466,56,156,3201,2986,2911,2706,1901]
+    #selected_avdistances_v_t = Vector{Vector{Float64}}()
     for frame in 1:frame_num
 
         timestep,n,L,xy = read_dump_info(dump) #Leer informacion del dump en el frame actual
@@ -400,7 +418,7 @@ function main()
             b = SVector{3,Float64}([xy,L,0])
             c = SVector{3,Float64}([0,0,L])
             
-            println("Frame: ",frame)
+            #println("Frame: ",frame)
             centers_coords,centers_id,patches_coords,patches_id = read_dump_particles(dump,n) #Leer coordenadas y id del dump en el frame actual
             centers_coords = fix_boundaries(centers_coords,xy,L) #Asegurar que todas las particulas esten dentro de la caja
             patches_coords = fix_boundaries(patches_coords,xy,L) #Asegurar que todas las particulas esten dentro de la caja
@@ -413,7 +431,7 @@ function main()
 
             xl_coordinations = Vector{Int64}()
             av_distances = Vector{Float64}()
-            selected_avdistances = Vector{Float64}(undef,length(selected_xls))
+            #selected_avdistances = Vector{Float64}(undef,length(selected_xls))
             for c_xl in xl_list
                 #print(c_xl, " ")
                 queue = Vector{Int64}() #Cola
@@ -445,6 +463,7 @@ function main()
                     end
                 end
 
+                #=
                 for i in eachindex(selected_xls)
                     if c_xl == selected_xls[i]
                         av_distance = 0
@@ -455,7 +474,7 @@ function main()
                         selected_avdistances[i] = av_distance
                     end
                 end
-                
+                =#
 
                 if length(linked_xls)>0
                     av_distance = 0
@@ -472,16 +491,18 @@ function main()
                 end
             end
             
-            println("Mean coordination: ",mean(xl_coordinations))
-            push!(mean_coordination,mean(xl_coordinations))
+            #println("Mean coordination: ",mean(xl_coordinations))
+            c_mean_coordinations,c_std_coordinations = mean_std(xl_coordinations)
+            push!(mean_coordination,c_mean_coordinations)
+            push!(std_coordination,c_std_coordinations)
 
             c_mean_distances,c_std_distances = mean_std(av_distances)
-            println("Mean distance: ",c_mean_distances)
-            println("StD distance: ",c_std_distances)
+            #println("Mean distance: ",c_mean_distances)
+            #println("StD distance: ",c_std_distances)
             push!(mean_distance,c_mean_distances)
             push!(std_distance,c_std_distances)
 
-            push!(selected_avdistances_v_t,selected_avdistances)
+            #push!(selected_avdistances_v_t,selected_avdistances)
 
         else
             for _ in 1:n
@@ -491,17 +512,19 @@ function main()
     end
     close(dump)
 
-    savedir = dir * "/" * "analysis_results"
+    #savedir = dir * "/" * "analysis_results"
     #println("Coordination: ",mean_coordination)
-    write_json(savedir,mean_coordination,"mean_xl_coord_v_t")
+    write_json(savedir,mean_coordination,"mean_xl_coordination")
     #println("Distances: ",mean_distance)
-    write_json(savedir,mean_distance,"mean_xl_distance_v_t")
+    write_json(savedir,mean_distance,"mean_xl_distance")
 
-    write_json(savedir,std_distance,"std_xl_distance_v_t")
+    write_json(savedir,std_distance,"std_xl_distance")
+
+    write_json(savedir,std_coordination,"std_xl_coordination")
 
     write_json(savedir,calc_frames,"xldistance_calcframes")
 
-    write_json(savedir,selected_avdistances_v_t,"selected_avdistances_v_t")
+    #write_json(savedir,selected_avdistances_v_t,"selected_avdistances")
 
 end
 

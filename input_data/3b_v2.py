@@ -33,7 +33,7 @@ def main():
 
     h = 0.0001
 
-    inputfilesdir = f"{sys.argv[3]}/input_data"
+    inputfilesdir = sys.argv[3]
 
     minR = 0.01
     maxR = r_c-0.001

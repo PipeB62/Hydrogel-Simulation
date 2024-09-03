@@ -57,10 +57,10 @@ def average_hist(data):
 def average_general():
     import sys 
 
-    expdir = sys.argv[1]
-    savedir = sys.argv[2]
-    dataname = sys.argv[3]
-    expnum = int(sys.argv[4])
+    expdir = sys.argv[1] #directorio que contiene todos los experimentos
+    savedir = sys.argv[2] #directorio donde guardar datos promediados
+    dataname = sys.argv[3] #nombre del archivo json que contiene los datos en cada experimento. (sin el .json)
+    expnum = int(sys.argv[4]) #numero de experimentos
 
     data = []
 
@@ -71,7 +71,7 @@ def average_general():
     data_ave, data_std = average(data)
 
     write_json(savedir,f"{dataname}_ave",data_ave)
-    write_json(savedir,f"{dataname}_std",data_std)
+    write_json(savedir,f"{dataname}_err",data_std)
     
 def average_basic_analysis():
     import sys 

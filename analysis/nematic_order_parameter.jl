@@ -4,10 +4,6 @@ using Plots
 using LinearAlgebra
 using NearestNeighbors
 
-using Profile
-using BenchmarkTools
-
-using DelimitedFiles
 
 function cdot(u1::SVector{3,Float64}, u2::SVector{3,Float64}) 
     sum(u1.*u2)
@@ -181,12 +177,11 @@ function fix_boundaries(r::Vector{SVector{3,Float64}},xy::Float64,L::Float64)
     r = shear(r,-xy,L) #Aplicar el shear inverso
     r = wrap_boundaries(r,L) #Asegurar que todas las particulas esten dentro de la caja
     r = shear(r,xy,L) #Revertir el shear
-    #r = wrap_boundaries(r,L) #Mapeo a caja central
     return r
 end
 
 #Crear datos con copias periodicas (centros)
-function periodic_data(id::Vector{SVector{2,Int64}},coords::Vector{SVector{3,Float64}},L::Float64)
+function periodic_data(id::Vector{SVector{2,Int64}},coords::Vector{SVector{3,Float64}},a::SVector{3,Float64},b::SVector{3,Float64},c::SVector{3,Float64})
 
     coords_periodic = Vector{SVector{3,Float64}}()
     id_periodic = Vector{SVector{2,Int64}}()
@@ -194,7 +189,7 @@ function periodic_data(id::Vector{SVector{2,Int64}},coords::Vector{SVector{3,Flo
     for q in -1:1
         for p in -1:1
             for o in -1:1
-                tr = SVector{3,Float64}([o*L,p*L,q*L])
+                tr = o*a + p*b + q*c
                 for i in eachindex(coords)
                     push!(coords_periodic,coords[i]+tr)
                     push!(id_periodic,id[i])
@@ -215,7 +210,7 @@ function periodic_data(id::Vector{SVector{2,Int64}},coords::Vector{SVector{3,Flo
 end
 
 #Crear datos con copias periodicas (patches)
-function periodic_data(id::Vector{Int64},coords::Vector{SVector{3,Float64}},L::Float64)
+function periodic_data(id::Vector{Int64},coords::Vector{SVector{3,Float64}},a::SVector{3,Float64},b::SVector{3,Float64},c::SVector{3,Float64})
 
     coords_periodic = Vector{SVector{3,Float64}}()
     id_periodic = Vector{Int64}()
@@ -223,7 +218,7 @@ function periodic_data(id::Vector{Int64},coords::Vector{SVector{3,Float64}},L::F
     for q in -1:1
         for p in -1:1
             for o in -1:1
-                tr = SVector{3,Float64}([o*L,p*L,q*L])
+                tr = tr = o*a + p*b + q*c
                 for i in eachindex(coords)
                     push!(coords_periodic,coords[i]+tr)
                     push!(id_periodic,id[i])
@@ -274,7 +269,6 @@ function get_neigbors(c_id::Int64,
                 break
             end
         end
-        #patches_tree = KDTree(patches_coords_periodic)
         neigh_patches_ix = inrange(patches_tree,point,r_c)
         #println(neigh_patches_ix)
         for i in neigh_patches_ix
@@ -325,7 +319,7 @@ function get_coords(c_id::Int64,centers_id::Vector{SVector{2,Int64}},centers_coo
             break
         end
     end
-    coords = centers_coords[i]
+    coords = centers_coords[index]
     return coords
 end
 
@@ -333,7 +327,9 @@ function real_distance(c_id1::Int64,
     c_id2::Int64,
     centers_coords::Vector{SVector{3,Float64}},
     centers_id::Vector{SVector{2,Int64}},
-    L::Float64)
+    a::SVector{3,Float64},
+    b::SVector{3,Float64},
+    c::SVector{3,Float64})
 
     r1 = SVector{3,Float64}(0,0,0)
     for i in eachindex(centers_id)
@@ -356,7 +352,7 @@ function real_distance(c_id1::Int64,
     for q in -1:1
         for p in -1:1
             for o in -1:1
-                tr = SVector{3,Float64}([o*L,p*L,q*L])
+                tr = o*a + p*b + q*c
                 r2t = r2 + tr
                 ds[aa] = norm(r1-r2t)
                 aa+=1
@@ -368,6 +364,36 @@ function real_distance(c_id1::Int64,
 
 end
 
+function get_curvature(chainids::Vector{Int64},
+    centers_coords::Vector{SVector{3,Float64}},
+    centers_id::Vector{SVector{2,Int64}})
+
+    R = Vector{SVector{3,Float64}}(undef,length(chainids))
+
+    for k in eachindex(chainids)
+        c_id = chainids[k]
+        for i in eachindex(centers_id)
+            if centers_id[i][1] == c_id
+                R[k] = centers_coords[i]
+                break
+            end
+        end
+    end
+
+    t = Vector{SVector{3,Float64}}(undef,length(chainids)-1)
+    for i in 1:length(R)-1
+        t[i]=(R[i+1]-R[i])/norm(R[i+1]-R[i])
+    end
+
+    kappa_ds = Vector{Float64}(undef,length(chainids)-2)
+    for i in 1:length(t)-1
+        kappa_ds[i]=sqrt(2*(1-cdot(t[i],t[i+1])))
+    end
+
+    kappa = sum(kappa_ds)
+
+end
+
 #Guarda los datos en un archivo json
 function write_json(savedir,data,name)
     json_string = JSON.json(data)
@@ -376,88 +402,138 @@ function write_json(savedir,data,name)
     end
 end
 
+function remove!(a, item)
+    deleteat!(a, findall(x->x==item, a))
+end
+
+function get_orientation_vector(c_id::Int64,
+    bonds::Array{Float64},
+    patches_id::Vector{Int64},
+    patches_coords::Vector{SVector{3,Float64}},
+    a::SVector{3,Float64},
+    b::SVector{3,Float64},
+    c::SVector{3,Float64})
+
+    #Encontrar patches de particula
+    indexes1 = findall(item -> item == c_id, bonds[:,1])
+    indexes2 = findall(item -> item == c_id, bonds[:,2])
+    c_patches = bonds[indexes1,2]
+    append!(c_patches,bonds[indexes2,1])
+
+    #Extraer posicion de los patches
+    v1 = SVector{3,Float64}([0,0,0])
+    v2 = SVector{3,Float64}([0,0,0])
+    check=0
+    for i in eachindex(patches_id)
+        if patches_id[i]==c_patches[1]
+            v1=patches_coords[i]
+            check+=1
+        elseif patches_id[i]==c_patches[2]
+            v2=patches_coords[i]
+            check+=1
+        end
+
+        if check==2
+            break
+        end
+    end
+
+    #Crear vector de orientacion unitario m considerando fronteras periodicas
+    m_all = Vector{SVector{3,Float64}}(undef,27)
+    aa = 1
+    for q in -1:1
+        for p in -1:1
+            for o in -1:1
+                tr = o*a + p*b + q*c
+                v2t = v2 + tr
+                m_all[aa] = v2t-v1
+                aa+=1
+            end
+        end
+    end
+
+    m = argmin(x->norm(x),m_all)
+    m = m./norm(m)
+    
+    return m
+end
+
 function main()
 
-    dir = ARGS[1]
-    dumpp = ARGS[2]
+    dumpdir = ARGS[1]
+    systemdir = ARGS[2]
+    savedir = ARGS[3]
 
-    dumpdir = dir * "/" * dumpp
+    println("Inicio parametro de orden nematico")
 
     frame_num = read_frame_num(dumpdir)
 
-    calc_frame = 1
+    calc_frames_num = frame_num/10
+    calc_frames_step = floor(frame_num/calc_frames_num)
+    calc_frames = 1:calc_frames_step:frame_num
+    write_json(savedir,calc_frames,"nematic_order_parameter_calcframes")
+
+    _,bonds = read_system_bonds(systemdir) #Leer bonds del archivo system.data
 
     dump = open(dumpdir,"r") #Abrir dump
 
+    S_vt = Vector{Float64}()
+
     for frame in 1:frame_num
 
-        timestep,n,L,xy = read_dump_info(dump) #Leer informacion del dump en el frame actual
+        _,n,L,xy = read_dump_info(dump) #Leer informacion del dump en el frame actual
 
-        if frame == calc_frame
-            println("Frame: ",frame)
-            println("xy = ",xy)
-            centers_coords,centers_id,patches_coords,patches_id = read_dump_particles(dump,n) #Leer coordenadas y id del dump en el frame actual
+        if frame in calc_frames
+
+            #Triclinic box vectors
+            a = SVector{3,Float64}([L,0,0])
+            b = SVector{3,Float64}([xy,L,0])
+            c = SVector{3,Float64}([0,0,L])
+
+            #println("Frame: ",frame)
+            _,centers_id,patches_coords,patches_id = read_dump_particles(dump,n) #Leer coordenadas y id del dump en el frame actual
+            #centers_coords = fix_boundaries(centers_coords,xy,L) #Asegurar que todas las particulas esten dentro de la caja
+            patches_coords = fix_boundaries(patches_coords,xy,L) #Asegurar que todas las particulas esten dentro de la caja
             
-            ix = 1 
-            for ii in centers_id
-                if ii[1]==48225
-                    break
-                else
-                    ix+=1
+            centers = [centers_id[i][1] for i in eachindex(centers_id)]
+
+            M = Array{Float64}(undef,3,3)
+            for c_id in centers
+                m = get_orientation_vector(c_id,bonds,patches_id,patches_coords,a,b,c)
+                for alpha in 1:3
+                    for beta in 1:3
+                        M[alpha,beta]+=m[alpha]*m[beta]
+                    end
                 end
             end
-            println(centers_id[ix])
-            println(centers_coords[ix])
+            M = M./length(centers)
 
-            centers_coords_x = [i[1] for i in centers_coords]
-            centers_coords_y = [i[2] for i in centers_coords]
-            centers_coords_z = [i[3] for i in centers_coords]
-            patches_coords_x = [i[1] for i in patches_coords]
-            patches_coords_y = [i[2] for i in patches_coords]
-            patches_coords_z = [i[3] for i in patches_coords]
+            Q = (3/2)*M - (1/2)*I
 
-            centers_id_w = Int64[i[1] for i in centers_id]
+            eig = eigen(Q)
+            index = findfirst(x->x==maximum(eig.values),eig.values)
 
-            open(dir*"/particles_pre.xyz", "w") do file
-                writedlm(file, n)
-                write(file,"Lattice=\"$L 0 0 $xy $L 0 0 0 $L\" Origin=\"$(-L/2) $(-L/2) $(-L/2)\" Properties=type:I:1:id:I:1:pos:R:3\n")
-                
-                writedlm(file, Union{Int64,Float64}[ones(Int,length(centers_coords)) centers_id_w centers_coords_x centers_coords_y centers_coords_z])
-                writedlm(file, Union{Int64,Float64}[2*ones(Int,length(patches_coords)) patches_id patches_coords_x patches_coords_y patches_coords_z])
-            end
+            S = eig.values[index]
+            n_vec = eig.vectors[:,index]
 
-            centers_coords = fix_boundaries(centers_coords,xy,L) #Mapeo a caja central
-            patches_coords = fix_boundaries(patches_coords,xy,L) #Mapeo a caja central
+            println("S = ",S)
+            push!(S_vt,S)
 
-            centers_coords_x = [i[1] for i in centers_coords]
-            centers_coords_y = [i[2] for i in centers_coords]
-            centers_coords_z = [i[3] for i in centers_coords]
-            patches_coords_x = [i[1] for i in patches_coords]
-            patches_coords_y = [i[2] for i in patches_coords]
-            patches_coords_z = [i[3] for i in patches_coords]
-
-            open(dir*"/particles_post.xyz", "w") do file
-                writedlm(file, n)
-                write(file,"Lattice=\"$L 0 0 $xy $L 0 0 0 $L\" Properties=type:I:1:id:I:1:pos:R:3\n")
-                
-                writedlm(file, Union{Int64,Float64}[ones(Int,length(centers_coords)) centers_id_w centers_coords_x centers_coords_y centers_coords_z])
-                writedlm(file, Union{Int64,Float64}[2*ones(Int,length(patches_coords)) patches_id patches_coords_x patches_coords_y patches_coords_z])
-            end
-            
-            break
+            #println("n = ",n_vec)
 
         else
             for _ in 1:n
                 readline(dump)
             end
         end
+
+
     end
     close(dump)
 
+    write_json(savedir,S_vt,"nematic_order_parameter")
+
 end
 
+
 main()
-
-
-
-

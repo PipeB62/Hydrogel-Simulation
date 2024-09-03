@@ -13,6 +13,9 @@ También deben contener el archivo con la informacion de las mediciones de presi
 
 '''
 
+from analysis.Old import non_affine_sq_disp
+
+
 def main():
     #Esto es para que ovito y matplotlib funcionen correctamente
     import os
@@ -21,7 +24,7 @@ def main():
     import numpy as np
     import matplotlib.pyplot as plt
     import sys
-    from analysis import count_bonds_and_clusters,non_affine_sq_disp
+    from analysis import count_bonds_and_clusters
 
     #El argumento debe ser el directorio SizeExperiments
 
