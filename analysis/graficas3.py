@@ -682,6 +682,109 @@ def nematic_order_parameter():
 
     plt.show()
 
+def extension():
+    import numpy as np
+    import matplotlib as mpl
+    import matplotlib.pyplot as plt
+    import matplotlib.gridspec as gridspec 
+
+    mpl.rcParams['pdf.fonttype'] = 42
+    mpl.rcParams['font.size'] = 14
+
+    shear_rates = [r"$\dot{\gamma}=1\times 10^{-2}$",r"$\dot{\gamma}=1\times 10^{-3}$",r"$\dot{\gamma}=1\times 10^{-4}$"]
+    colors = ["#1f77b4","#ff7f0e","#2ca02c"]
+
+    stress_ave = []
+    stress_err = []
+    strain = []
+
+    for i in range(3):
+        dir = f"/media/felipe/Files/Hydrogel_sim_experiments/FullExperiment1/dGamma{i+1}/averaged_data"
+        stress_ave.append(load_json(dir,"stress_ave"))
+        stress_err.append(load_json(dir,"stress_err"))
+        strain.append(load_json(dir,"strain_ave")[1:])
+
+    stress_ext_ave = []
+    stress_ext_err = []
+    strain_ext = []    
+    dir = f"/media/felipe/Files/Hydrogel_sim_experiments/FullExperiment1/dGamma1/averaged_data"
+    stress_ext_ave.append(load_json(dir,"stress_extension1_ave"))
+    stress_ext_err.append(load_json(dir,"stress_extension1_err"))
+    strain_ext.append(load_json(dir,"strain_extension1_ave")[1:]) 
+
+    for i,ss in enumerate(strain_ext):
+        strain_ext[i]=[x+20 for x in ss]
+
+    index=0
+    for i,s in enumerate(strain[0]):
+        if s>=15:
+            index=i
+            break
+    
+    eq_stress = []
+    eq_stress_err = []
+    for i in range(3):
+        eq_stress.append(np.mean(stress_ave[i][index:]))
+        err = 0
+        for k in stress_err[i][index:]:
+            err+=k**2
+        eq_stress_err.append((1/len(stress_err[i][index:]))*np.sqrt(err))
+
+    fig,ax = plt.subplots(figsize=(5,5))
+
+    for i in range(2):
+        ax.plot(strain[i],stress_ave[i],label=shear_rates[i],color=colors[i])
+        ax.errorbar(strain[i][::30],stress_ave[i][::30],yerr=stress_err[i][::30],marker='o',markersize=4,mfc='w',alpha = 0.9,linestyle='None',capsize=1,color=colors[i])
+
+    ax.plot(strain_ext[0],stress_ext_ave[0],color=colors[0])
+    ax.errorbar(strain_ext[0][::30],stress_ext_ave[0][::30],yerr=stress_ext_err[0][::30],marker='o',markersize=4,mfc='w',alpha = 0.9,linestyle='None',capsize=1,color=colors[0])
+
+    ax.hlines(eq_stress[1],15,26,linestyle="--",color="red")
+
+    ax.set_xlabel("$\gamma$")
+    ax.set_ylabel("$\sigma_{xy}$")
+
+    ax.legend()
+
+    #ax.set_xscale('log')
+    #ax.set_yscale('log')
+
+    ax.minorticks_on()
+    ax.tick_params(direction='in',which='minor',length=2,right=True,top=True)
+    ax.tick_params(direction='in',which='major',length=5,right=True,top=True)
+
+    fig.savefig("/media/felipe/Files/Hydrogel_sim_experiments/FullExperiment1/Graficas/stress_strain_extension1.pdf",dpi=300,bbox_inches='tight')
+
+    plt.show()
+
+def velocity_profile_se():
+    import numpy as np
+    import matplotlib as mpl
+    import matplotlib.pyplot as plt
+    import matplotlib.gridspec as gridspec 
+
+    mpl.rcParams['pdf.fonttype'] = 42
+    mpl.rcParams['font.size'] = 14
+
+    shear_rates = [r"$\dot{\gamma}=1\times 10^{-2}$",r"$\dot{\gamma}=1\times 10^{-3}$",r"$\dot{\gamma}=1\times 10^{-4}$"]
+    colors = ["#1f77b4","#ff7f0e","#2ca02c"]
+
+    dir = "/media/felipe/Files/Hydrogel_sim_experiments/FullExperiment1/dGamma3/exp1/analysis_results"
+
+    fig,ax = plt.subplots(figsize=(5,5))
+
+    velocity_profiles = load_json(dir,"velocity_profile")
+    bins = load_json(dir,"velocity_profile_bins")
+
+    for i in range(1,10):
+        ax.plot(bins,velocity_profiles[i],marker="s",linestyle="--")
+    
+    ax.set_xlabel("$y$")
+    ax.set_ylabel("$v_x$")
+
+    fig.savefig("/media/felipe/Files/Hydrogel_sim_experiments/FullExperiment1/Graficas/velocity_profile_dGamma3_exp1.pdf",dpi=300,bbox_inches='tight')
+
+    plt.show()
 
 
 def main():
@@ -692,7 +795,9 @@ def main():
     #xldistance()
     #chain_analysis()
     #stress_shearrate()
-    nematic_order_parameter()
+    #nematic_order_parameter()
+    #extension()
+    velocity_profile_se()
 
 if __name__=="__main__":
     main()

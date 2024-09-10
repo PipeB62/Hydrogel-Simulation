@@ -492,21 +492,24 @@ function main()
 
             #println("Frame: ",frame)
             _,centers_id,patches_coords,patches_id = read_dump_particles(dump,n) #Leer coordenadas y id del dump en el frame actual
-            #centers_coords = fix_boundaries(centers_coords,xy,L) #Asegurar que todas las particulas esten dentro de la caja
             patches_coords = fix_boundaries(patches_coords,xy,L) #Asegurar que todas las particulas esten dentro de la caja
             
-            centers = [centers_id[i][1] for i in eachindex(centers_id)]
-
             M = Array{Float64}(undef,3,3)
-            for c_id in centers
-                m = get_orientation_vector(c_id,bonds,patches_id,patches_coords,a,b,c)
-                for alpha in 1:3
-                    for beta in 1:3
-                        M[alpha,beta]+=m[alpha]*m[beta]
+            nmons=0
+            for i in eachindex(centers_id)
+                c_id = centers_id[i][1]
+                c_type = centers_id[i][2]
+                if c_type==1
+                    nmons+=1
+                    m = get_orientation_vector(c_id,bonds,patches_id,patches_coords,a,b,c)
+                    for alpha in 1:3
+                        for beta in 1:3
+                            M[alpha,beta]+=m[alpha]*m[beta]
+                        end
                     end
                 end
             end
-            M = M./length(centers)
+            M = M./nmons
 
             Q = (3/2)*M - (1/2)*I
 

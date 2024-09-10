@@ -413,18 +413,18 @@ function main()
 
 
     dumpdir = ARGS[1]
-    xyzdir = ARGS[2]
+    savedir = ARGS[2]
+    remove_shear = ARGS[3]
 
-    println("Inicio velocity analysis")
+    println("Inicio velocity profile analysis")
 
     frame_num = read_frame_num(dumpdir)
 
-    calc_frames_num = frame_num/100
+    calc_frames_num = 10
     calc_frames_step = floor(frame_num/calc_frames_num)
     calc_frames = 2:calc_frames_step:frame_num
 
     dump = open(dumpdir,"r") #Abrir dump
-    xyzfile = open(xyzdir,"w")
 
     #Leer primer frame (primer frame de referencia)
 
@@ -432,31 +432,44 @@ function main()
 
     r_centers_coords,r_centers_id,_,_ = read_dump_particles(dump,n) #Leer coordenadas y id del dump en el frame actual
     r_centers_coords = fix_boundaries(r_centers_coords,r_xy,L) #Asegurar que todas las particulas esten dentro de la caja
-    #r_centers_coords = shear(r_centers_coords,-r_xy,L)
+    if remove_shear=="yes"
+        println("removing shear")
+        r_centers_coords = shear(r_centers_coords,-r_xy,L)
+    end
+
+    n_bins = 50
+    binstep = L/n_bins 
+    bins = binstep/2:binstep:L
 
     dt = 0.001
 
+    velocity_profile_vt = Vector{Vector{Float64}}()
     for frame in 2:frame_num
 
         timestep,n,L,c_xy = read_dump_info(dump) #Leer informacion del dump en el frame actual
 
         #Triclinic box vectors
-        a = SVector{3,Float64}([L,0,0])
-        b = SVector{3,Float64}([c_xy,L,0])
-        c = SVector{3,Float64}([0,0,L])
+        if remove_shear=="yes"
+            a = SVector{3,Float64}([L,0,0])
+            b = SVector{3,Float64}([0,L,0])
+            c = SVector{3,Float64}([0,0,L])
+        else
+            a = SVector{3,Float64}([L,0,0])
+            b = SVector{3,Float64}([c_xy,L,0])
+            c = SVector{3,Float64}([0,0,L])
+        end
 
         c_centers_coords,c_centers_id,_,_ = read_dump_particles(dump,n) #Leer coordenadas y id del dump en el frame actual
         c_centers_coords = fix_boundaries(c_centers_coords,c_xy,L) #Asegurar que todas las particulas esten dentro de la caja
-        #c_centers_coords = shear(c_centers_coords,-c_xy,L)
-
-        if frame in calc_frames
-            print(frame," ")
-            write(xyzfile, "$(length(c_centers_id))\n")
-            write(xyzfile,"Lattice=\"$L 0 0 $c_xy $L 0 0 0 $L\" Origin=\"0.0 0.0 0.0\" Properties=id:I:1:pos:R:3:velo:R:3\n")
+        if remove_shear=="yes"
+            c_centers_coords = shear(c_centers_coords,-c_xy,L)
         end
 
         centers_list = [c_centers_id[i][1] for i in eachindex(c_centers_id)]
+        #println(length(centers_list))
 
+        velocity_profile = zeros(Float64,n_bins)
+        particles_per_bin = zeros(Int64,n_bins)
         for i in eachindex(centers_list)
             cid = centers_list[i]
             current_coords = c_centers_coords[i]
@@ -487,9 +500,17 @@ function main()
             v = ds./dt
 
             if frame in calc_frames
-                write(xyzfile,"$cid $(current_coords[1]) $(current_coords[2]) $(current_coords[3]) $(v[1]) $(v[2]) $(v[3])\n")
+                deltas = [abs(current_coords[2]-k) for k in bins]
+                bin_index = argmin(deltas)
+                velocity_profile[bin_index] += v[1]
+                particles_per_bin[bin_index] += 1
             end
-            
+        end
+
+        if frame in calc_frames 
+            println("Frame: ",frame)
+            velocity_profile = velocity_profile./particles_per_bin
+            push!(velocity_profile_vt,velocity_profile)
         end
 
         #Frame actual ahora es el de referencia
@@ -498,6 +519,10 @@ function main()
 
     end
     close(dump)
+
+    write_json(savedir,velocity_profile_vt,"velocity_profile")
+    write_json(savedir,bins,"velocity_profile_bins")
+    write_json(savedir,calc_frames,"velocity_profile_calcframes")
 
 end
 
