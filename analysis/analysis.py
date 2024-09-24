@@ -174,14 +174,14 @@ def strain(dumpdir,savedir,savelm):
     write_json(savedir,f"strain_{savelm}",strain)
     print("FIN")
 
-def stress(presdir,savedir,savelm):
+def stress(presdir,savedir):
 
     print("Inicio stress")
 
     stress = [-row[4] for row in load_data(presdir)]
 
     print("Escribiendo resultados en archivos json")
-    write_json(savedir,f"stress_{savelm}",stress)
+    write_json(savedir,f"stress",stress)
     print("FIN")
 
 def pot_ene_formation(pot_ene_dir,savedir,savelm):
@@ -199,19 +199,18 @@ def main():
     import sys
 
     #dir = sys.argv[1]
-    dumpdir = sys.argv[1]
-    presdir = sys.argv[2]
-    savedir = sys.argv[3]
-    savelm = sys.argv[4]
+    #dumpdir = sys.argv[1]
+    presdir = sys.argv[1]
+    savedir = sys.argv[2]
     #pot_ene = sys.argv[4]
 
     #dumpdir = "/".join([dir,dump])
 
-    print('Iniciando analisis')
-    count_bonds_and_clusters(dumpdir,savedir,savelm)
+    #print('Iniciando analisis')
+    #count_bonds_and_clusters(dumpdir,savedir,savelm)
     #non_affine_sq_disp(dumpdir,savedir)
-    strain(dumpdir,savedir,savelm)
-    stress(presdir,savedir,savelm)
+    #strain(dumpdir,savedir,savelm)
+    stress(presdir,savedir)
     #pot_ene_formation(dir,pot_ene)
     print('FIN')
 

@@ -551,50 +551,60 @@ def stress_shearrate():
 
     stress_ave = []
     stress_err = []
-    strain = []
-    for i in range(3):
+
+    for i in range(10):
         dir = f"/media/felipe/Files/Hydrogel_sim_experiments/FullExperiment1/dGamma{i+1}/averaged_data"
         stress_ave.append(load_json(dir,"stress_ave"))
         stress_err.append(load_json(dir,"stress_err"))
-        strain.append(load_json(dir,"strain_ave")[1:])
+    
+    strain = load_json("/media/felipe/Files/Hydrogel_sim_experiments/FullExperiment1/dGamma1/averaged_data","strain_ave")[1:]
 
     index=0
-    for i,s in enumerate(strain[0]):
+    for i,s in enumerate(strain):
         if s>=15:
             index=i
             break
     
     eq_stress = []
     eq_stress_err = []
-    for i in range(3):
+    for i in range(10):
         eq_stress.append(np.mean(stress_ave[i][index:]))
         err = 0
         for k in stress_err[i][index:]:
             err+=k**2
         eq_stress_err.append((1/len(stress_err[i][index:]))*np.sqrt(err))
 
-    shearrate = [0.01,0.001,0.0001]
+    shearrate = [0.01,0.001,0.0001,0.00125,0.0025,0.00375,0.005,0.00625,0.0075,0.00875]
+
+    order = [2,1,3,4,5,6,7,8,9,0]
+    shearrate_ordered = []
+    eq_stress_ordered = []
+    eq_stress_err_ordered = []
+    for i in order:
+        shearrate_ordered.append(shearrate[i])
+        eq_stress_ordered.append(eq_stress[i])
+        eq_stress_err_ordered.append(eq_stress_err[i])
 
     fig,ax = plt.subplots(figsize=(5,5))
 
-    ax.plot(shearrate,eq_stress,linestyle="--")
-    ax.errorbar(shearrate,eq_stress,yerr=eq_stress_err,marker='s',markersize=6,mfc='w',alpha = 0.9,linestyle='None',capsize=1)
+    ax.plot(shearrate_ordered,eq_stress_ordered,linestyle="--")
+    ax.errorbar(shearrate_ordered,eq_stress_ordered,yerr=eq_stress_err_ordered,marker='s',markersize=6,mfc='w',alpha = 0.9,linestyle='None',capsize=1)
 
     ax.set_xlabel("$\dot{\gamma}$")
     ax.set_ylabel("$\sigma_{xy}$")
 
-    #ax.set_xscale('log')
-    #ax.set_yscale('log')
+    ax.set_xscale('log')
+    ax.set_yscale('log')
 
     ax.set_xlim(0,0.011)
-    ax.set_ylim(0,0.0125)
+    #ax.set_ylim(0,0.0125)
 
     ax.minorticks_on()
-    ax.set_yticks(np.arange(0.001,0.0121,0.002))
+    #ax.set_yticks(np.arange(0.001,0.0121,0.002))
     ax.tick_params(direction='in',which='minor',length=2,right=True,top=True)
     ax.tick_params(direction='in',which='major',length=5,right=True,top=True)
 
-    fig.savefig("/media/felipe/Files/Hydrogel_sim_experiments/FullExperiment1/Graficas/stress_shearrate.pdf",dpi=300,bbox_inches='tight')
+    #fig.savefig("/media/felipe/Files/Hydrogel_sim_experiments/FullExperiment1/Graficas/stress_shearrate.pdf",dpi=300,bbox_inches='tight')
 
     plt.show()
 
@@ -757,7 +767,7 @@ def extension():
 
     plt.show()
 
-def velocity_profile_se():
+def structure_factor():
     import numpy as np
     import matplotlib as mpl
     import matplotlib.pyplot as plt
@@ -769,23 +779,161 @@ def velocity_profile_se():
     shear_rates = [r"$\dot{\gamma}=1\times 10^{-2}$",r"$\dot{\gamma}=1\times 10^{-3}$",r"$\dot{\gamma}=1\times 10^{-4}$"]
     colors = ["#1f77b4","#ff7f0e","#2ca02c"]
 
-    dir = "/media/felipe/Files/Hydrogel_sim_experiments/FullExperiment1/dGamma3/exp1/analysis_results"
+    S_x = []
+    S_y = []
+    S_z = []
 
-    fig,ax = plt.subplots(figsize=(5,5))
+    S_x_err = []
+    S_y_err = []
+    S_z_err = []
+    for i in range(3):
+        dir = f"/media/felipe/Files/Hydrogel_sim_experiments/FullExperiment1/dGamma{i+1}/averaged_data"
+        S_x.append(load_json(dir,"structure_factor_x_ave"))
+        S_y.append(load_json(dir,"structure_factor_y_ave"))
+        S_z.append(load_json(dir,"structure_factor_z_ave"))
 
-    velocity_profiles = load_json(dir,"velocity_profile")
-    bins = load_json(dir,"velocity_profile_bins")
+        S_x_err.append(load_json(dir,"structure_factor_x_err"))
+        S_y_err.append(load_json(dir,"structure_factor_y_err"))
+        S_z_err.append(load_json(dir,"structure_factor_z_err"))
 
-    for i in range(1,10):
-        ax.plot(bins,velocity_profiles[i],marker="s",linestyle="--")
-    
-    ax.set_xlabel("$y$")
-    ax.set_ylabel("$v_x$")
+    k = load_json("/media/felipe/Files/Hydrogel_sim_experiments/FullExperiment1/dGamma1/averaged_data","structure_factor_kvalues_x_ave")
 
-    fig.savefig("/media/felipe/Files/Hydrogel_sim_experiments/FullExperiment1/Graficas/velocity_profile_dGamma3_exp1.pdf",dpi=300,bbox_inches='tight')
+
+    #Crear figura
+    fig = plt.figure(1,figsize=(8,8))
+
+    #Gridspec para subplots
+    gs = gridspec.GridSpec(3,4)
+    gs.update(wspace=0.2,hspace=0.5)
+
+    ax1 = fig.add_subplot(gs[0,0:4])
+
+    ax1.plot(k,S_x[0],linestyle="--",color=colors[0],label="x")
+    ax1.errorbar(k,S_x[0],yerr=S_x_err[0],marker='s',markersize=4,mfc='w',alpha = 0.9,linestyle='None',capsize=1,color=colors[0])
+    ax1.plot(k,S_y[0],linestyle="--",color=colors[1],label="y")
+    ax1.errorbar(k,S_y[0],yerr=S_y_err[0],marker='o',markersize=4,mfc='w',alpha = 0.9,linestyle='None',capsize=1,color=colors[1])
+    ax1.plot(k,S_z[0],linestyle="--",color=colors[2],label="z")
+    ax1.errorbar(k,S_z[0],yerr=S_z_err[0],marker='v',markersize=4,mfc='w',alpha = 0.9,linestyle='None',capsize=1,color=colors[2])
+
+    ax1.legend()
+    ax1.set_xlabel(r"$k$")
+    ax1.set_ylabel(r"$S(\vec{k})$")
+    ax1.set_title(shear_rates[0])
+
+    ax1.minorticks_on()
+    ax1.tick_params(direction='in',which='minor',length=2,right=True,top=True)
+    ax1.tick_params(direction='in',which='major',length=5,right=True,top=True)
+
+    ax2 = fig.add_subplot(gs[1,0:4])
+
+    ax2.plot(k,S_x[1],linestyle="--",color=colors[0],label="x")
+    ax2.errorbar(k,S_x[1],yerr=S_x_err[1],marker='s',markersize=4,mfc='w',alpha = 0.9,linestyle='None',capsize=1,color=colors[0])
+    ax2.plot(k,S_y[1],linestyle="--",color=colors[1],label="y")
+    ax2.errorbar(k,S_y[1],yerr=S_y_err[1],marker='o',markersize=4,mfc='w',alpha = 0.9,linestyle='None',capsize=1,color=colors[1])
+    ax2.plot(k,S_z[1],linestyle="--",color=colors[2],label="z")
+    ax2.errorbar(k,S_z[1],yerr=S_z_err[1],marker='v',markersize=4,mfc='w',alpha = 0.9,linestyle='None',capsize=1,color=colors[2])
+
+    ax2.legend()
+    ax2.set_xlabel(r"$k$")
+    ax2.set_ylabel(r"$S(\vec{k})$")
+    ax2.set_title(shear_rates[1])
+
+    ax2.minorticks_on()
+    ax2.tick_params(direction='in',which='minor',length=2,right=True,top=True)
+    ax2.tick_params(direction='in',which='major',length=5,right=True,top=True)
+
+    ax3 = fig.add_subplot(gs[2,0:4])
+
+    ax3.plot(k,S_x[2],linestyle="--",color=colors[0],label="x")
+    ax3.errorbar(k,S_x[2],yerr=S_x_err[2],marker='s',markersize=4,mfc='w',alpha = 0.9,linestyle='None',capsize=1,color=colors[0])
+    ax3.plot(k,S_y[2],linestyle="--",color=colors[1],label="y")
+    ax3.errorbar(k,S_y[2],yerr=S_y_err[2],marker='o',markersize=4,mfc='w',alpha = 0.9,linestyle='None',capsize=1,color=colors[1])
+    ax3.plot(k,S_z[2],linestyle="--",color=colors[2],label="z")
+    ax3.errorbar(k,S_z[2],yerr=S_z_err[2],marker='v',markersize=4,mfc='w',alpha = 0.9,linestyle='None',capsize=1,color=colors[2])
+
+    ax3.legend()
+    ax3.set_xlabel(r"$k$")
+    ax3.set_ylabel(r"$S(\vec{k})$")
+    ax3.set_title(shear_rates[2])
+
+    ax3.minorticks_on()
+    ax3.tick_params(direction='in',which='minor',length=2,right=True,top=True)
+    ax3.tick_params(direction='in',which='major',length=5,right=True,top=True)
+
+    #fig.savefig("/media/felipe/Files/Hydrogel_sim_experiments/FullExperiment1/Graficas/velocity_profile_dGamma3_exp1.pdf",dpi=300,bbox_inches='tight')
 
     plt.show()
 
+def ISF():
+    import numpy as np
+    import matplotlib as mpl
+    import matplotlib.pyplot as plt
+    import matplotlib.gridspec as gridspec 
+
+    mpl.rcParams['pdf.fonttype'] = 42
+    mpl.rcParams['font.size'] = 14
+
+    deltat = [0.001*1000,0.001*10000,0.001*100000]
+    titles = [r"$\dot{\gamma}=10^{-2}$",r"$\dot{\gamma}=10^{-3}$",r"$\dot{\gamma}=10^{-4}$"]
+
+    ISF_xy=[]
+    ISF_xz=[]
+    ISF_yz=[]
+    time_xy=[]
+    time_xz=[]
+    time_yz=[]
+
+    for i in range(3):
+        dir = f"/media/felipe/Files/Hydrogel_sim_experiments/FullExperiment1/dGamma{i+1}/exp1/analysis_results"
+        ISF_xy.append(load_json(dir,"ISF_xy"))
+        frames_xy = load_json(dir,"ISF_calcframes_xy")
+        time_xy.append([deltat[i]*j for j in frames_xy])
+
+        ISF_xz.append(load_json(dir,"ISF_xz"))
+        frames_xz = load_json(dir,"ISF_calcframes_xz")
+        time_xz.append([deltat[i]*j for j in frames_xz])
+
+        ISF_yz.append(load_json(dir,"ISF_yz"))
+        frames_yz = load_json(dir,"ISF_calcframes_yz")
+        time_yz.append([deltat[i]*j for j in frames_yz])
+
+
+    #Crear figura
+    fig = plt.figure(1,figsize=(8,10))
+
+    #Gridspec para subplots
+    gs = gridspec.GridSpec(3,4)
+    gs.update(wspace=0.2,hspace=0.7)
+
+    for i in range(3):
+
+        ax = fig.add_subplot(gs[i,0:4])
+
+        ax.set_title(titles[i])
+
+        ax.plot(time_xy[i],ISF_xy[i],marker="s",markersize=2,label="xy")
+        ax.plot(time_xz[i],ISF_xz[i],marker="s",markersize=2,label="xz")
+        ax.plot(time_yz[i],ISF_yz[i],marker="s",markersize=2,label="yz")
+
+        ax.set_xlabel("$t$")
+        ax.set_ylabel("$F$")
+
+        ax.legend()
+
+        ax.set_xscale('log')
+        #ax.set_yscale('log')
+
+        #ax.set_xlim(0,0.011)
+        #ax.set_ylim(0,0.0125)
+
+        ax.minorticks_on()
+        #ax.set_yticks(np.arange(0.001,0.0121,0.002))
+        ax.tick_params(direction='in',which='minor',length=2,right=True,top=True)
+        ax.tick_params(direction='in',which='major',length=5,right=True,top=True)
+
+    #fig.savefig("/media/felipe/Files/Hydrogel_sim_experiments/FullExperiment1/Graficas/stress_shearrate.pdf",dpi=300,bbox_inches='tight')
+
+    plt.show()
 
 def main():
 
@@ -797,7 +945,9 @@ def main():
     #stress_shearrate()
     #nematic_order_parameter()
     #extension()
-    velocity_profile_se()
+    #structure_factor()
+
+    ISF()
 
 if __name__=="__main__":
     main()
