@@ -40,7 +40,7 @@ function main()
     r_centers_coords,r_centers_id,_,_ = read_dump_particles(dump,n) #Leer coordenadas y id del dump en el frame actual
     r_centers_coords = fix_boundaries(r_centers_coords,L,a,b,c) #Asegurar que todas las particulas esten dentro de la caja
     r_centers_coords = shear(r_centers_coords,-r_xy,L) #Revertir shear
-    r_centers_coords = wrap_boundaries(r_centers_coords,L,a_0,b_0,c_0) #Mapear a caja central
+    r_centers_coords = wrap_boundaries(r_centers_coords,a_0,b_0,c_0) #Mapear a caja central
 
     N_p = length(r_centers_coords) #Numero de particulas (centros)
 
@@ -110,7 +110,7 @@ function main()
             c_centers_coords,c_centers_id,_,_ = read_dump_particles(dump,n) #Leer coordenadas y id del dump en el frame actual
             c_centers_coords = fix_boundaries(c_centers_coords,L,a,b,c) #Asegurar que todas las particulas esten dentro de la caja
             c_centers_coords = shear(c_centers_coords,-real_xy,L) #Revertir shear
-            c_centers_coords = wrap_boundaries(c_centers_coords,L,a_0,b_0,c_0) #Mapeo a caja central
+            c_centers_coords = wrap_boundaries(c_centers_coords,a_0,b_0,c_0) #Mapeo a caja central
 
             Fkt = 0
             test = 0

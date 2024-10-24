@@ -41,7 +41,7 @@ function main()
 
             #println("Frame: ",frame)
             _,centers_id,patches_coords,patches_id = read_dump_particles(dump,n) #Leer coordenadas y id del dump en el frame actual
-            patches_coords = fix_boundaries(patches_coords,xy,L) #Asegurar que todas las particulas esten dentro de la caja
+            patches_coords = fix_boundaries(patches_coords,L,a,b,c) #Asegurar que todas las particulas esten dentro de la caja
             
             M = Array{Float64}(undef,3,3)
             nmons=0

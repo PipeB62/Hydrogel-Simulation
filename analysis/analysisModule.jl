@@ -192,7 +192,7 @@ module analysisModule
     export shear
 
     #Asegura que todas las particulas esten dentro de la caja
-    function wrap_boundaries(r::Vector{SVector{3,Float64}},L::Float64,a::SVector{3,Float64},b::SVector{3,Float64},c::SVector{3,Float64})
+    function wrap_boundaries(r::Vector{SVector{3,Float64}},a::SVector{3,Float64},b::SVector{3,Float64},c::SVector{3,Float64})
         r_warped = Vector{SVector{3,Float64}}(undef,length(r))
         T = SMatrix{3,3,Float64}([a[1],a[2],a[3],b[1],b[2],b[3],c[1],c[2],c[3]])
         Tinv = inv(T)
@@ -209,7 +209,7 @@ module analysisModule
     #Mueve el origen a la esquina de la caja y se asegura que todas las particulas esten dentro de la caja de simulacion
     function fix_boundaries(r::Vector{SVector{3,Float64}},L::Float64,a::SVector{3,Float64},b::SVector{3,Float64},c::SVector{3,Float64})
         r_t = traslacion(r,L/2) #Mover origen a orilla de la caja
-        r_w = wrap_boundaries(r_t,L,a,b,c) #Asegurar que todas las particulas esten dentro de la caja
+        r_w = wrap_boundaries(r_t,a,b,c) #Asegurar que todas las particulas esten dentro de la caja
         return r_w
     end
 

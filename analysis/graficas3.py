@@ -51,8 +51,8 @@ def stress_strain():
         ax.plot(strain[i],stress_ave[i],label=shear_rates[i],color=colors[i])
         ax.errorbar(strain[i][::30],stress_ave[i][::30],yerr=stress_err[i][::30],marker='o',markersize=4,mfc='w',alpha = 0.9,linestyle='None',capsize=1,color=colors[i])
 
-    ax.set_xlabel("$\gamma$")
-    ax.set_ylabel("$\sigma_{xy}$")
+    ax.set_xlabel(r"$\gamma$")
+    ax.set_ylabel(r"$\sigma_{xy}$")
 
     ax.legend()
 
@@ -95,8 +95,8 @@ def stress_strain_loglog():
         ax.plot(strain[i],stress_ave[i],label=shear_rates[i],color=colors[i])
         ax.errorbar(strain[i][::30],stress_ave[i][::30],yerr=stress_err[i][::30],marker='o',markersize=4,mfc='w',alpha = 0.9,linestyle='None',capsize=1,color=colors[i])
 
-    ax.set_xlabel("$\gamma$")
-    ax.set_ylabel("$\sigma_{xy}$")
+    ax.set_xlabel(r"$\gamma$")
+    ax.set_ylabel(r"$\sigma_{xy}$")
 
     ax.legend()
 
@@ -163,7 +163,7 @@ def basic_analysis():
         ax1.plot(strain[i][1:],stress_ave[i],label=shear_rates[i],color=colors[i])
 
     ax1.legend()
-    ax1.set_ylabel("$\sigma_{xy}$")
+    ax1.set_ylabel(r"$\sigma_{xy}$")
 
     ax1.minorticks_on()
     ax1.set_xticks(np.arange(0,20.1,5))
@@ -304,7 +304,7 @@ def xldistance():
         ax1.plot(strain[i][1:],stress_ave[i],label=shear_rates[i],color=colors[i])
 
     ax1.legend()
-    ax1.set_ylabel("$\sigma_{xy}$")
+    ax1.set_ylabel(r"$\sigma_{xy}$")
 
     ax1.minorticks_on()
     ax1.set_xticks(np.arange(0,20.1,5))
@@ -452,7 +452,7 @@ def chain_analysis():
         ax1.plot(strain[i][1:],stress_ave[i],label=shear_rates[i],color=colors[i])
 
     ax1.legend(loc="right")
-    ax1.set_ylabel("$\sigma_{xy}$")
+    ax1.set_ylabel(r"$\sigma_{xy}$")
 
     ax1.minorticks_on()
     ax1.set_xticks(np.arange(0,20.1,5))
@@ -590,8 +590,8 @@ def stress_shearrate():
     ax.plot(shearrate_ordered,eq_stress_ordered,linestyle="--")
     ax.errorbar(shearrate_ordered,eq_stress_ordered,yerr=eq_stress_err_ordered,marker='s',markersize=6,mfc='w',alpha = 0.9,linestyle='None',capsize=1)
 
-    ax.set_xlabel("$\dot{\gamma}$")
-    ax.set_ylabel("$\sigma_{xy}$")
+    ax.set_xlabel(r"$\dot{\gamma}$")
+    ax.set_ylabel(r"$\sigma_{xy}$")
 
     ax.set_xscale('log')
     ax.set_yscale('log')
@@ -662,7 +662,7 @@ def nematic_order_parameter():
         ax1.plot(strain[i][1:],stress_ave[i],label=shear_rates[i],color=colors[i])
 
     ax1.legend()
-    ax1.set_ylabel("$\sigma_{xy}$")
+    ax1.set_ylabel(r"$\sigma_{xy}$")
 
     ax1.minorticks_on()
     ax1.set_xticks(np.arange(0,20.1,5))
@@ -678,7 +678,7 @@ def nematic_order_parameter():
 
 
     ax2.set_ylabel("$S$")
-    ax2.set_xlabel("$\gamma$")
+    ax2.set_xlabel(r"$\gamma$")
 
     ax2.set_ylim((0,0.62))
 
@@ -751,8 +751,8 @@ def extension():
 
     ax.hlines(eq_stress[1],15,26,linestyle="--",color="red")
 
-    ax.set_xlabel("$\gamma$")
-    ax.set_ylabel("$\sigma_{xy}$")
+    ax.set_xlabel(r"$\gamma$")
+    ax.set_ylabel(r"$\sigma_{xy}$")
 
     ax.legend()
 
@@ -779,86 +779,26 @@ def structure_factor():
     shear_rates = [r"$\dot{\gamma}=1\times 10^{-2}$",r"$\dot{\gamma}=1\times 10^{-3}$",r"$\dot{\gamma}=1\times 10^{-4}$"]
     colors = ["#1f77b4","#ff7f0e","#2ca02c"]
 
-    S_x = []
-    S_y = []
-    S_z = []
-
-    S_x_err = []
-    S_y_err = []
-    S_z_err = []
-    for i in range(3):
-        dir = f"/media/felipe/Files/Hydrogel_sim_experiments/FullExperiment1/dGamma{i+1}/averaged_data"
-        S_x.append(load_json(dir,"structure_factor_x_ave"))
-        S_y.append(load_json(dir,"structure_factor_y_ave"))
-        S_z.append(load_json(dir,"structure_factor_z_ave"))
-
-        S_x_err.append(load_json(dir,"structure_factor_x_err"))
-        S_y_err.append(load_json(dir,"structure_factor_y_err"))
-        S_z_err.append(load_json(dir,"structure_factor_z_err"))
-
-    k = load_json("/media/felipe/Files/Hydrogel_sim_experiments/FullExperiment1/dGamma1/averaged_data","structure_factor_kvalues_x_ave")
-
-
     #Crear figura
-    fig = plt.figure(1,figsize=(8,8))
+    fig = plt.figure(1,figsize=(8,4))
 
     #Gridspec para subplots
-    gs = gridspec.GridSpec(3,4)
+    gs = gridspec.GridSpec(1,1)
     gs.update(wspace=0.2,hspace=0.5)
 
-    ax1 = fig.add_subplot(gs[0,0:4])
+    #ax = fig.add_subplot(gs[0,0:4])
 
-    ax1.plot(k,S_x[0],linestyle="--",color=colors[0],label="x")
-    ax1.errorbar(k,S_x[0],yerr=S_x_err[0],marker='s',markersize=4,mfc='w',alpha = 0.9,linestyle='None',capsize=1,color=colors[0])
-    ax1.plot(k,S_y[0],linestyle="--",color=colors[1],label="y")
-    ax1.errorbar(k,S_y[0],yerr=S_y_err[0],marker='o',markersize=4,mfc='w',alpha = 0.9,linestyle='None',capsize=1,color=colors[1])
-    ax1.plot(k,S_z[0],linestyle="--",color=colors[2],label="z")
-    ax1.errorbar(k,S_z[0],yerr=S_z_err[0],marker='v',markersize=4,mfc='w',alpha = 0.9,linestyle='None',capsize=1,color=colors[2])
+    #Importar datos 
 
-    ax1.legend()
-    ax1.set_xlabel(r"$k$")
-    ax1.set_ylabel(r"$S(\vec{k})$")
-    ax1.set_title(shear_rates[0])
+    dir = f"E:/Hydrogel_sim_experiments/FullExperiment1/dGamma1/exp1/analysis_results"
+    S_vt = load_json(dir,"structure_factor_vt_x")
+    k = load_json(dir,"structure_factor_vt_kvalues_x")
 
-    ax1.minorticks_on()
-    ax1.tick_params(direction='in',which='minor',length=2,right=True,top=True)
-    ax1.tick_params(direction='in',which='major',length=5,right=True,top=True)
+    ax = fig.add_subplot(gs[0,0])
+    for i in [0,4]:
+        ax.plot(k,S_vt[i],marker="s",linestyle="--",label=f"{i}")
 
-    ax2 = fig.add_subplot(gs[1,0:4])
-
-    ax2.plot(k,S_x[1],linestyle="--",color=colors[0],label="x")
-    ax2.errorbar(k,S_x[1],yerr=S_x_err[1],marker='s',markersize=4,mfc='w',alpha = 0.9,linestyle='None',capsize=1,color=colors[0])
-    ax2.plot(k,S_y[1],linestyle="--",color=colors[1],label="y")
-    ax2.errorbar(k,S_y[1],yerr=S_y_err[1],marker='o',markersize=4,mfc='w',alpha = 0.9,linestyle='None',capsize=1,color=colors[1])
-    ax2.plot(k,S_z[1],linestyle="--",color=colors[2],label="z")
-    ax2.errorbar(k,S_z[1],yerr=S_z_err[1],marker='v',markersize=4,mfc='w',alpha = 0.9,linestyle='None',capsize=1,color=colors[2])
-
-    ax2.legend()
-    ax2.set_xlabel(r"$k$")
-    ax2.set_ylabel(r"$S(\vec{k})$")
-    ax2.set_title(shear_rates[1])
-
-    ax2.minorticks_on()
-    ax2.tick_params(direction='in',which='minor',length=2,right=True,top=True)
-    ax2.tick_params(direction='in',which='major',length=5,right=True,top=True)
-
-    ax3 = fig.add_subplot(gs[2,0:4])
-
-    ax3.plot(k,S_x[2],linestyle="--",color=colors[0],label="x")
-    ax3.errorbar(k,S_x[2],yerr=S_x_err[2],marker='s',markersize=4,mfc='w',alpha = 0.9,linestyle='None',capsize=1,color=colors[0])
-    ax3.plot(k,S_y[2],linestyle="--",color=colors[1],label="y")
-    ax3.errorbar(k,S_y[2],yerr=S_y_err[2],marker='o',markersize=4,mfc='w',alpha = 0.9,linestyle='None',capsize=1,color=colors[1])
-    ax3.plot(k,S_z[2],linestyle="--",color=colors[2],label="z")
-    ax3.errorbar(k,S_z[2],yerr=S_z_err[2],marker='v',markersize=4,mfc='w',alpha = 0.9,linestyle='None',capsize=1,color=colors[2])
-
-    ax3.legend()
-    ax3.set_xlabel(r"$k$")
-    ax3.set_ylabel(r"$S(\vec{k})$")
-    ax3.set_title(shear_rates[2])
-
-    ax3.minorticks_on()
-    ax3.tick_params(direction='in',which='minor',length=2,right=True,top=True)
-    ax3.tick_params(direction='in',which='major',length=5,right=True,top=True)
+    ax.legend()
 
     #fig.savefig("/media/felipe/Files/Hydrogel_sim_experiments/FullExperiment1/Graficas/velocity_profile_dGamma3_exp1.pdf",dpi=300,bbox_inches='tight')
 
@@ -884,7 +824,8 @@ def ISF():
     time_yz=[]
 
     for i in range(3):
-        dir = f"/media/felipe/Files/Hydrogel_sim_experiments/FullExperiment1/dGamma{i+1}/exp1/analysis_results"
+        #dir = f"/media/felipe/Files/Hydrogel_sim_experiments/FullExperiment1/dGamma{i+1}/exp1/analysis_results"
+        dir = f"E:/Hydrogel_sim_experiments/FullExperiment1/dGamma{i+1}/exp1/analysis_results"
         ISF_xy.append(load_json(dir,"ISF_xy"))
         frames_xy = load_json(dir,"ISF_calcframes_xy")
         time_xy.append([deltat[i]*j for j in frames_xy])
@@ -935,6 +876,46 @@ def ISF():
 
     plt.show()
 
+def vel_distr():
+    import numpy as np
+    import matplotlib as mpl
+    import matplotlib.pyplot as plt
+    import matplotlib.gridspec as gridspec 
+
+    mpl.rcParams['pdf.fonttype'] = 42
+    mpl.rcParams['font.size'] = 14
+
+    dir = f"E:/Hydrogel_sim_experiments/FullExperiment1/dGamma1/exp1/analysis_results"
+    all_velocities = load_json(dir,"all_velocities")
+
+    fig,ax = plt.subplots(figsize=(5,5))
+
+    ax.hist(all_velocities,bins=np.arange(0,30,0.5),density=True)
+    ax.set_yscale("log")
+
+    plt.show()
+
+def velocity_profile():
+    import numpy as np
+    import matplotlib as mpl
+    import matplotlib.pyplot as plt
+    import matplotlib.gridspec as gridspec 
+
+    mpl.rcParams['pdf.fonttype'] = 42
+    mpl.rcParams['font.size'] = 14
+
+    dir = f"E:/Hydrogel_sim_experiments/FullExperiment1/dGamma1/exp1/analysis_results"
+    velocity_profile = load_json(dir,"velocity_profile")
+    velocity_profile_bins = load_json(dir,"velocity_profile_bins")
+
+    fig,ax = plt.subplots(figsize=(5,5))
+    
+    for i in range(10):
+        ax.plot(velocity_profile_bins,velocity_profile[i],marker="s")
+
+    plt.show()
+
+
 def main():
 
     #stress_strain()
@@ -946,8 +927,9 @@ def main():
     #nematic_order_parameter()
     #extension()
     #structure_factor()
-
-    ISF()
+    #ISF()
+    #vel_distr()
+    velocity_profile()
 
 if __name__=="__main__":
     main()

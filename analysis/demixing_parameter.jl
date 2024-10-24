@@ -8,34 +8,57 @@ using .analysisModule
 function main()
 
     dumpdir = ARGS[1] 
-    N_l = parse(Int64,ARGS[2])
+    savedir = ARGS[2]
+    N_l = parse(Int64,ARGS[3])
 
     frame_num = read_frame_num(dumpdir)
 
-    calc_frames_num = 50
-    calc_frames_step = floor(frame_num/calc_frames_num)
-    calc_frames = 1:calc_frames_step:frame_num
-    
-    N_particles = 16000
-    L = 2*25.54
-    rho_0 = N_particles/(L^3)
-
     dump = open(dumpdir,"r")
 
+    calc_frames_num = 50
+    calc_frames_step = floor(frame_num/calc_frames_num)
+    calc_frames = 2:calc_frames_step:frame_num
+
+    #Leer primer frame (referencia)
+    timestep,n,L,r_xy = read_dump_info(dump)
+    r_centers_coords,_,_,_ = read_dump_particles(dump,n) #Leer posiciones de particulas del dump
+
+    #Caja central
+    a_0 = SVector{3,Float64}([L,0,0])
+    b_0 = SVector{3,Float64}([0,L,0])
+    c_0 = SVector{3,Float64}([0,0,L])
+    
+    N_particles = length(r_centers_coords)
+    rho_0 = N_particles/(L^3)
+
     phi = Vector{Float64}()
+    p_xy = r_xy
+    flipcount=0
+    for frame in 2:frame_num   
 
-    for frame in 1:frame_num
+        timestep,n,L,c_xy = read_dump_info(dump)
 
-        timestep,n,L,xy = read_dump_info(dump)
+        #Obtener el tilt real (sin flip)
+        if abs(c_xy-p_xy)>1
+            flipcount+=1
+        end
+        real_xy = L*flipcount+c_xy
+
+        #Triclinic box vectors
+        a = SVector{3,Float64}([L,0,0])
+        b = SVector{3,Float64}([c_xy,L,0])
+        c = SVector{3,Float64}([0,0,L])
 
         if frame in calc_frames
 
             println("Frame:","$(frame) ")
 
-            r = read_dump_coords(dump,n) #Leer posiciones de particulas del dump
-            r = fix_boundaries(r,xy,L) #Asegurar que todas las particulas esten dentro de la caja (condiciones periodicas) y mapeo a caja central. 
+            c_centers_coords,_,_,_ = read_dump_particles(dump,n) #Leer posiciones de particulas del dump
+            c_centers_coords = fix_boundaries(c_centers_coords,L,a,b,c) #Asegurar que todas las particulas esten dentro de la caja
+            c_centers_coords = shear(c_centers_coords,-real_xy,L) #Revertir shear
+            c_centers_coords = wrap_boundaries(c_centers_coords,a_0,b_0,c_0) #Mapeo a caja central
 
-            push!(phi,demixing_param(r,L,N_l,rho_0))
+            push!(phi,demixing_param(c_centers_coords,L,N_l,rho_0))
 
         else
             for _ in 1:n
@@ -43,15 +66,14 @@ function main()
             end
         end
 
+        p_xy = c_xy
+
     end
 
-    #display(scatter(1:length(phi),phi,show=true))
-    #readline()
+    scatter(1:length(phi),phi,show=true)
+    readline()
 
-    dir = split(dumpdir,"/")
-    dir[end] = "analysis_results"
-    savedir = join(dir,"/")
-    write_json(savedir,phi,"demixing_param_$(N_l)")
+    #write_json(savedir,phi,"demixing_param_$(N_l)")
 
 end
 

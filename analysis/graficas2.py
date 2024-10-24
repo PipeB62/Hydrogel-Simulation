@@ -2616,7 +2616,7 @@ def main():
     #xldistance_se()
     #selected_xl_distances()
     #chain_analysis_se()
-    chain_analysis()
+    #chain_analysis()
 
 if __name__ == '__main__':
     main()

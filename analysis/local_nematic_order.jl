@@ -39,7 +39,7 @@ function main()
         c = SVector{3,Float64}([0,0,L])
 
         centers_coords,centers_id,patches_coords,patches_id = read_dump_particles(dump,n) #Leer coordenadas y id del dump en el frame actual
-        centers_coords = fix_boundaries(centers_coords,xy,L) #Asegurar que todas las particulas esten dentro de la caja
+        centers_coords = fix_boundaries(centers_coords,L,a,b,c) #Asegurar que todas las particulas esten dentro de la caja
 
         if frame in calc_frames
             print(frame," ")

@@ -9,12 +9,6 @@ using .analysisModule
 
 function main()
 
-    #dir = ARGS[1]
-    #dumpp = ARGS[2]
-    #system = ARGS[3]
-
-    #dumpdir = dir * "/" * dumpp
-    #systemdir = dir * "/" * system
 
     dumpdir = ARGS[1]
     systemdir = ARGS[2]
@@ -53,8 +47,8 @@ function main()
             
             #println("Frame: ",frame)
             centers_coords,centers_id,patches_coords,patches_id = read_dump_particles(dump,n) #Leer coordenadas y id del dump en el frame actual
-            centers_coords = fix_boundaries(centers_coords,xy,L) #Asegurar que todas las particulas esten dentro de la caja
-            patches_coords = fix_boundaries(patches_coords,xy,L) #Asegurar que todas las particulas esten dentro de la caja
+            centers_coords = fix_boundaries(centers_coords,L,a,b,c) #Asegurar que todas las particulas esten dentro de la caja
+            patches_coords = fix_boundaries(patches_coords,L,a,b,c) #Asegurar que todas las particulas esten dentro de la caja
             patches_id_periodic, patches_coords_periodic = periodic_data(patches_id,patches_coords,a,b,c) #Obtener datos con copias periodicas de los patches
             patches_tree = KDTree(patches_coords_periodic) #Crear KDTree de patches con condiciones de frontera periodicas
             #centers_id_periodic, centers_coords_periodic = periodic_data(patches_id,patches_coords,L) #Obtener datos con copias periodicas de los centros

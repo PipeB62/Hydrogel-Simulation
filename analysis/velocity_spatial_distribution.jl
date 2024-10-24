@@ -29,34 +29,47 @@ function main()
 
     timestep,n,L,r_xy = read_dump_info(dump) #Leer informacion del dump en el frame actual
 
+    #Caja central
+    a_0 = SVector{3,Float64}([L,0,0])
+    b_0 = SVector{3,Float64}([0,L,0])
+    c_0 = SVector{3,Float64}([0,0,L])
+
+    #Triclinic box vectors
+    a = SVector{3,Float64}([L,0,0])
+    b = SVector{3,Float64}([r_xy,L,0])
+    c = SVector{3,Float64}([0,0,L])
+
     r_centers_coords,r_centers_id,_,_ = read_dump_particles(dump,n) #Leer coordenadas y id del dump en el frame actual
-    r_centers_coords = fix_boundaries(r_centers_coords,r_xy,L) #Asegurar que todas las particulas esten dentro de la caja
+    r_centers_coords = fix_boundaries(r_centers_coords,L,a,b,c) #Asegurar que todas las particulas esten dentro de la caja
     if remove_shear=="yes"
         println("removing shear")
-        r_centers_coords = shear(r_centers_coords,-r_xy,L)
+        r_centers_coords = shear(r_centers_coords,-r_xy,L) #Reverir shear
+        r_centers_coords = wrap_boundaries(r_centers_coords,a_0,b_0,c_0)
     end
 
-    dt = 0.001
-
+    dt = 0.001 * 1000
+    p_xy = r_xy
+    flipcount = 0
     for frame in 2:frame_num
 
         timestep,n,L,c_xy = read_dump_info(dump) #Leer informacion del dump en el frame actual
 
-        #Triclinic box vectors
-        if remove_shear=="yes"
-            a = SVector{3,Float64}([L,0,0])
-            b = SVector{3,Float64}([0,L,0])
-            c = SVector{3,Float64}([0,0,L])
-        else
-            a = SVector{3,Float64}([L,0,0])
-            b = SVector{3,Float64}([c_xy,L,0])
-            c = SVector{3,Float64}([0,0,L])
+        #Obtener el tilt real (sin flip)
+        if abs(c_xy-p_xy)>1
+            flipcount+=1
         end
+        real_xy =L*flipcount+c_xy
+
+        #Triclinic box vectors
+        a = SVector{3,Float64}([L,0,0])
+        b = SVector{3,Float64}([c_xy,L,0])
+        c = SVector{3,Float64}([0,0,L])
 
         c_centers_coords,c_centers_id,_,_ = read_dump_particles(dump,n) #Leer coordenadas y id del dump en el frame actual
-        c_centers_coords = fix_boundaries(c_centers_coords,c_xy,L) #Asegurar que todas las particulas esten dentro de la caja
+        c_centers_coords = fix_boundaries(c_centers_coords,L,a,b,c) #Asegurar que todas las particulas esten dentro de la caja
         if remove_shear=="yes"
-            c_centers_coords = shear(c_centers_coords,-c_xy,L)
+            c_centers_coords = shear(c_centers_coords,-real_xy,L)
+            c_centers_coords = wrap_boundaries(c_centers_coords,a_0,b_0,c_0)
         end
 
         if frame in calc_frames
@@ -109,6 +122,7 @@ function main()
         #Frame actual ahora es el de referencia
         r_centers_coords = c_centers_coords
         r_centers_id = c_centers_id
+        p_xy = c_xy
 
     end
     close(dump)
